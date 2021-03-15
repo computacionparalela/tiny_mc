@@ -5,11 +5,11 @@
  * Adaptado para CP2014, Nicolas Wolovick
  */
 
+#include "wtime.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
-#include <omp.h> // handy omp_get_wtime()
 #include <string.h> // strlen
 #include <time.h> // time
 #include <math.h>
@@ -117,13 +117,13 @@ int main(void)
 	// configure RNG
 	srand(SEED);
 	// start timer
-	start = omp_get_wtime();
+	start = wtime();
 	// simulation
 	for (i=0; i<PHOTONS; ++i) {
 		photon();
 	}
 	// stop timer
-	end = omp_get_wtime();
+	end = wtime();
 	assert(start<=end);
 	elapsed = end-start;
 
