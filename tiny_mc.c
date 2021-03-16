@@ -24,8 +24,9 @@ char t3[] = "CPU version, adapted for PEAGPGPU by Gustavo Castellano"
 
 
 // global state, heat and heat square in each shell
-float heat[SHELLS];
-float heat2[SHELLS];
+static float heat[SHELLS];
+static float heat2[SHELLS];
+
 
 /***
  * Photon
