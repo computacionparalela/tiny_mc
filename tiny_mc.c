@@ -19,10 +19,6 @@ char t3[] = "CPU version, adapted for PEAGPGPU by Gustavo Castellano"
             " and Nicolas Wolovick";
 
 
-// Internal definitions and functions
-#define MILLISEC 1E-3
-
-
 // global state, heat and heat square in each shell
 static float heat[SHELLS];
 static float heat2[SHELLS];
