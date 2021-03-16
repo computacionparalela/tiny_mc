@@ -5,47 +5,23 @@
  * Adaptado para CP2014, Nicolas Wolovick
  */
 
+#include "params.h"
 #include "wtime.h"
 
 #include <stdio.h>
 #include <stdlib.h>
 #include <assert.h>
-#include <string.h> // strlen
-#include <time.h> // time
 #include <math.h>
 
 char t1[] = "Tiny Monte Carlo by Scott Prahl (http://omlc.ogi.edu)";
 char t2[] = "1 W Point Source Heating in Infinite Isotropic Scattering Medium";
 char t3[] = "CPU version, adapted for PEAGPGPU by Gustavo Castellano"
-			" and Nicolas Wolovick";
-
-// Default parameters
-
-#ifndef SHELLS
-#define SHELLS 101 // discretization level
-#endif
-
-#ifndef PHOTONS
-#define PHOTONS 32768 // 32K photons
-#endif
-
-#ifndef MU_A
-#define MU_A 2.0f // Absorption Coefficient in 1/cm !!non-zero!!
-#endif
-
-#ifndef MU_S
-#define MU_S 20.0f // Reduced Scattering Coefficient in 1/cm
-#endif
-
-#ifndef MICRONS_PER_SHELL
-#define MICRONS_PER_SHELL 50 // Thickness of spherical shells in microns
-#endif
+            " and Nicolas Wolovick";
 
 
 // Internal definitions and functions
-#define SEED (time(NULL)) // random seed
 #define MILLISEC 1E-3
-#define RNGS 131072
+
 
 // global state, heat and heat square in each shell
 float heat[SHELLS];
