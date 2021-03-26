@@ -5,6 +5,8 @@
  * Adaptado para CP2014, Nicolas Wolovick
  */
 
+#define _XOPEN_SOURCE 500  // M_PI
+
 #include "params.h"
 #include "wtime.h"
 
