@@ -2,7 +2,8 @@
 CC = gcc
 
 # Flags
-CFLAGS = -std=c11 -Wall -Wextra -Wshadow
+OPT_FLAGS = -Ofast -ffast-math -funroll-loops -fpeel-loops -flto
+CFLAGS = -std=c11 -Wall -Wextra -Wshadow -march=native $(OPT_FLAGS)
 LDFLAGS = -lm
 
 # Binary file
