@@ -2,7 +2,7 @@
 CC = gcc
 
 # Flags
-CFLAGS = -std=c11 -Wall -Wextra
+CFLAGS = -std=c11 -Wall -Wextra -Wshadow
 LDFLAGS = -lm
 
 # Binary file
