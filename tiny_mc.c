@@ -47,7 +47,7 @@ static void photon(void)
 
         for (;;) {
                 /* Step 2: Step size selection and photon packet movement */
-                float t = -logf(rand() / (float)RAND_MAX);
+                float t = -logf(FAST_RAND());
                 /* move */
                 x += t * u;
                 y += t * v;
@@ -63,8 +63,8 @@ static void photon(void)
                 /* New direction, rejection method */
                 float xi1, xi2, tmp;
                 do {
-                        xi1 = 2.0f * rand() / (float)RAND_MAX - 1.0f;
-                        xi2 = 2.0f * rand() / (float)RAND_MAX - 1.0f;
+                        xi1 = 2.0f * FAST_RAND() - 1.0f;
+                        xi2 = 2.0f * FAST_RAND() - 1.0f;
                         t = xi1 * xi1 + xi2 * xi2;
                 } while (1.0f < t);
                 u = 2.0f * t - 1.0f;
@@ -75,7 +75,7 @@ static void photon(void)
                 /* Step 4: Photon termination */
                 if (weight < 0.001f) { /* roulette */
                         weight /= 0.1f;
-                        if (rand() / (float)RAND_MAX > 0.1f) {
+                        if (FAST_RAND() > 0.1f) {
                                 return;
                         }
                 }
@@ -95,11 +95,11 @@ int main(void)
         printf("# Absorption = %8.3f/cm\n", MU_A);
         printf("# Photons    = %8d\n#\n", PHOTONS);
 
+        // configure RNG
+        fast_srand(SEED);
+
         memset(heat,0,sizeof(float)*SHELLS);
         memset(heat2,0,sizeof(float)*SHELLS);
-
-        // configure RNG
-        srand(SEED);
 
         // start timer
         double start = wtime();
