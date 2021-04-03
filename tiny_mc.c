@@ -31,11 +31,11 @@ static float heat2[SHELLS];
  * Photon
  ***/
 
+#define ALBEDO (MU_S / (MU_S + MU_A))
+#define SHELLS_PER_MFP (1e4 / MICRONS_PER_SHELL / (MU_A + MU_S))
+
 static void photon(void)
 {
-        static const float albedo = MU_S / (MU_S + MU_A);
-        static const float shells_per_mfp = 1e4 / MICRONS_PER_SHELL / (MU_A + MU_S);
-
         /* Step 1: Launching a photon packet */
         float x = 0.0f;
         float y = 0.0f;
@@ -54,11 +54,11 @@ static void photon(void)
                 z += t * w;
 
                 /* Step 3: Absorption and scattering */
-                unsigned int shell = MIN(sqrtf(x * x + y * y + z * z) * shells_per_mfp, SHELLS - 1); /* absorb */
-                float _heat = (1.0f - albedo) * weight;
+                unsigned int shell = MIN(sqrtf(x * x + y * y + z * z) * SHELLS_PER_MFP, SHELLS - 1); /* absorb */
+                float _heat = (1.0f - ALBEDO) * weight;
                 heat[shell] += _heat;
                 heat2[shell] += _heat * _heat; /* add up squares */
-                weight *= albedo;
+                weight *= ALBEDO;
 
                 /* New direction, rejection method */
                 float xi1, xi2, tmp;
@@ -89,39 +89,42 @@ static void photon(void)
 
 int main(void)
 {
-        // heading
-        printf("# %s\n# %s\n# %s\n", t1, t2, t3);
-        printf("# Scattering = %8.3f/cm\n", MU_S);
-        printf("# Absorption = %8.3f/cm\n", MU_A);
-        printf("# Photons    = %8d\n#\n", PHOTONS);
-
+        /*
+            // heading
+            printf("# %s\n# %s\n# %s\n", t1, t2, t3);
+            printf("# Scattering = %8.3f/cm\n", MU_S);
+            printf("# Absorption = %8.3f/cm\n", MU_A);
+            printf("# Photons    = %8d\n#\n", PHOTONS);
+         */
         // configure RNG
         fast_srand(SEED);
 
+        // first run
         memset(heat,0,sizeof(float)*SHELLS);
         memset(heat2,0,sizeof(float)*SHELLS);
+        photon();
 
         // start timer
         double start = wtime();
         // simulation
-        for (unsigned int i = 0; i < PHOTONS; ++i) {
+        for (int i = 0; i < PHOTONS; ++i) {
                 photon();
         }
         // stop timer
         double end = wtime();
         assert(start <= end);
         double elapsed = (end - start)*1000.0;
-
-        printf("# Radius\tHeat\n");
-        printf("# [microns]\t[W/cm^3]\tError\n");
-        float t = 4.0f * M_PI * powf(MICRONS_PER_SHELL, 3.0f) * PHOTONS / 1e12;
-        for (unsigned int i = 0; i < SHELLS - 1; ++i) {
-                printf("%6.0f\t%12.5f\t%12.5f\n", i * (float)MICRONS_PER_SHELL,
-                       heat[i] / t / (i * i + i + 1.0 / 3.0),
-                       sqrt(heat2[i] - heat[i] * heat[i] / PHOTONS) / t / (i * i + i + 1.0f / 3.0f));
-        }
-        printf("# extra\t%12.5f\n", heat[SHELLS - 1] / PHOTONS);
-
+        /*
+            printf("# Radius\tHeat\n");
+            printf("# [microns]\t[W/cm^3]\tError\n");
+            float t = 4.0f * M_PI * powf(MICRONS_PER_SHELL, 3.0f) * PHOTONS / 1e12;
+            for (unsigned int i = 0; i < SHELLS - 1; ++i) {
+                    printf("%6.0f\t%12.5f\t%12.5f\n", i * (float)MICRONS_PER_SHELL,
+                           heat[i] / t / (i * i + i + 1.0 / 3.0),
+                           sqrt(heat2[i] - heat[i] * heat[i] / PHOTONS) / t / (i * i + i + 1.0f / 3.0f));
+            }
+            printf("# extra\t%12.5f\n", heat[SHELLS - 1] / PHOTONS);
+         */
         printf(">> %lf ms\n", elapsed);
         printf(">>> %lf K photons per second\n", 1e-3 * PHOTONS / (elapsed/1000.0));
 

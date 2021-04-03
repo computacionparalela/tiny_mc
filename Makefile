@@ -1,8 +1,8 @@
 # Compilers
-CC = gcc
+CC = gcc-10
 
 # Flags
-OPT_FLAGS = -Ofast -ffast-math -funroll-loops -fpeel-loops -flto
+OPT_FLAGS = -O2 -ffast-math -fexcess-precision=fast -funroll-all-loops
 CFLAGS = -std=c11 -Wall -Wextra -Wshadow -DRAND3 -march=native $(OPT_FLAGS)
 LDFLAGS = -lm
 
