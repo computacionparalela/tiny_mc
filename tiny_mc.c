@@ -21,6 +21,9 @@ char t2[] = "1 W Point Source Heating in Infinite Isotropic Scattering Medium";
 char t3[] = "CPU version, adapted for PEAGPGPU by Gustavo Castellano"
             " and Nicolas Wolovick";
 
+static unsigned int min(unsigned int x, unsigned int y){
+	return x<y? x:y;
+}
 
 // global state, heat and heat square in each shell
 static float heat[SHELLS];
@@ -54,7 +57,7 @@ static void photon(void)
                 z += t * w;
 
                 /* Step 3: Absorption and scattering */
-                unsigned int shell = MIN(sqrtf(x * x + y * y + z * z) * SHELLS_PER_MFP, SHELLS - 1); /* absorb */
+                unsigned int shell = min(sqrtf(x * x + y * y + z * z) * SHELLS_PER_MFP, SHELLS - 1); /* absorb */
                 float _heat = (1.0f - ALBEDO) * weight;
                 heat[shell] += _heat;
                 heat2[shell] += _heat * _heat; /* add up squares */

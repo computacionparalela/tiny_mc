@@ -2,7 +2,7 @@
 CC = gcc-10
 
 # Flags
-OPT_FLAGS = -O2 -ffast-math -fexcess-precision=fast -funroll-all-loops
+OPT_FLAGS = -O3 -ffast-math -fexcess-precision=fast -funroll-all-loops
 CFLAGS = -std=c11 -Wall -Wextra -Wshadow -DRAND3 -march=native $(OPT_FLAGS)
 LDFLAGS = -lm
 
