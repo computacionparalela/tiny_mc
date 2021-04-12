@@ -2,8 +2,8 @@
 CC = gcc-10
 
 # Flags
-OPT_FLAGS = -O3 -ffast-math -fexcess-precision=fast -funroll-all-loops
-CFLAGS = -std=c11 -Wall -Wextra -Wshadow -DRAND0 -DSEED=777 -DVERBOSE -march=native $(OPT_FLAGS)
+OPT_FLAGS = -Ofast
+CFLAGS = -std=c11 -Wall -Wextra -Wshadow -DRAND3 -DSEED=777 -DVERBOSE -march=native $(OPT_FLAGS)
 LDFLAGS = -lm
 
 # Binary file
