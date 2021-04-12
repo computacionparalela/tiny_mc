@@ -26,6 +26,12 @@
 #define SEED (time(NULL)) // random seed
 #endif
 
+#ifndef VERBOSE
+static const unsigned verbose = 0;
+#else
+static const unsigned verbose = 1;
+#endif
+
 #ifdef RAND0
 #include <stdlib.h>
 
@@ -40,7 +46,6 @@ float FAST_RAND(void) {
 #endif
 
 #ifdef RAND1
-
 #define MAXRAND 2147483646.0f
 
 int __rand_x = 0;

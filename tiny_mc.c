@@ -22,7 +22,7 @@ char t3[] = "CPU version, adapted for PEAGPGPU by Gustavo Castellano"
             " and Nicolas Wolovick";
 
 static unsigned int min(unsigned int x, unsigned int y){
-	return x<y? x:y;
+        return x<y ? x : y;
 }
 
 // global state, heat and heat square in each shell
@@ -92,13 +92,12 @@ static void photon(void)
 
 int main(void)
 {
-        /*
-            // heading
-            printf("# %s\n# %s\n# %s\n", t1, t2, t3);
-            printf("# Scattering = %8.3f/cm\n", MU_S);
-            printf("# Absorption = %8.3f/cm\n", MU_A);
-            printf("# Photons    = %8d\n#\n", PHOTONS);
-         */
+        if(verbose) {// heading
+                printf("# %s\n# %s\n# %s\n", t1, t2, t3);
+                printf("# Scattering = %8.3f/cm\n", MU_S);
+                printf("# Absorption = %8.3f/cm\n", MU_A);
+                printf("# Photons    = %8d\n#\n", PHOTONS);
+        }
         // configure RNG
         fast_srand(SEED);
 
@@ -117,17 +116,17 @@ int main(void)
         double end = wtime();
         assert(start <= end);
         double elapsed = (end - start)*1000.0;
-        /*
-            printf("# Radius\tHeat\n");
-            printf("# [microns]\t[W/cm^3]\tError\n");
-            float t = 4.0f * M_PI * powf(MICRONS_PER_SHELL, 3.0f) * PHOTONS / 1e12;
-            for (unsigned int i = 0; i < SHELLS - 1; ++i) {
-                    printf("%6.0f\t%12.5f\t%12.5f\n", i * (float)MICRONS_PER_SHELL,
-                           heat[i] / t / (i * i + i + 1.0 / 3.0),
-                           sqrt(heat2[i] - heat[i] * heat[i] / PHOTONS) / t / (i * i + i + 1.0f / 3.0f));
-            }
-            printf("# extra\t%12.5f\n", heat[SHELLS - 1] / PHOTONS);
-         */
+        if(verbose) {
+                printf("# Radius\tHeat\n");
+                printf("# [microns]\t[W/cm^3]\tError\n");
+                float t = 4.0f * M_PI * powf(MICRONS_PER_SHELL, 3.0f) * PHOTONS / 1e12;
+                for (unsigned int i = 0; i < 5; ++i) {
+                        printf("%6.0f\t%12.5f\t%12.5f\n", i * (float)MICRONS_PER_SHELL,
+                               heat[i] / t / (i * i + i + 1.0 / 3.0),
+                               sqrt(heat2[i] - heat[i] * heat[i] / PHOTONS) / t / (i * i + i + 1.0f / 3.0f));
+                }
+                printf("# extra\t%12.5f\n", heat[SHELLS - 1] / PHOTONS);
+        }
         printf(">> %lf ms\n", elapsed);
         printf(">>> %lf K photons per second\n", 1e-3 * PHOTONS / (elapsed/1000.0));
 

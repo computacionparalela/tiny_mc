@@ -16,13 +16,16 @@
 #include <stdlib.h>
 #include <string.h>
 
-#define MAXN (65535l)
-#define MAXM (MAXN*500l)
+#define MAXN (655350l)
+#define MAXM (MAXN)
 
 long long unsigned number[MAXN];
 
 int main(void)
 {
+
+        fast_srand(SEED);
+
         long double mean = 0, sd = 0;
 
         for(int i=0; i<MAXM; i++) {
