@@ -2,8 +2,8 @@
 CC = gcc-10
 
 # Flags
-OPT_FLAGS = -Ofast #-fprofile-use -fprofile-generate
-CFLAGS = -std=c11 -Wall -Wextra -Wshadow -DRAND3 -DSEED=777 -DVERBOSE -march=native $(OPT_FLAGS)
+OPT_FLAGS = -Ofast -fprofile-use#-fprofile-use -fprofile-generate
+CFLAGS = -std=c11 -Wall -Wextra -Wshadow -DRAND5 -DSEED=777 -DVERBOSE -march=native $(OPT_FLAGS)
 LDFLAGS = -lm
 
 # Binary file
@@ -19,6 +19,9 @@ all: $(TARGET)
 $(TARGET): $(C_OBJS)
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 
+clean_gcda:
+	rm -f *.gcda
+
 clean:
-	rm -f $(TARGET) *.o *.gcda
+	rm -f $(TARGET) *.o
 
