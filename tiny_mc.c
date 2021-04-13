@@ -102,11 +102,11 @@ int main(void)
         // first run
         memset(heat,0,sizeof(float)*SHELLS);
         memset(heat2,0,sizeof(float)*SHELLS);
+        // configure RNG
+        fast_srand(SEED);
 
         // start timer
         double start = wtime();
-        // configure RNG
-        fast_srand(SEED);
 		// simulation
         for (int i = 0; i < PHOTONS; ++i) {
                 photon();
