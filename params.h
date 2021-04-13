@@ -98,6 +98,7 @@ double FAST_RAND() {
 // * https://stackoverflow.com/questions/44960864/analysis-of-linear-congruential-generator-is-wrong
 #define MAXRAND 32767.0f
 static uint_fast32_t g_seed = 0;
+unsigned int cnt_rand = 0;
 
 void fast_srand(int seed) {
         g_seed = seed;
@@ -106,6 +107,57 @@ void fast_srand(int seed) {
 float FAST_RAND(void) {
         g_seed = 214013*g_seed+2531011;
         return ((g_seed>>16)&0x7FFF)/MAXRAND;
+}
+
+#endif
+
+#ifdef RAND4
+#include <stdint.h>
+#define MAXRAND 32767.0f
+#define MAXM 10000000
+
+static uint_fast32_t g_seed0 = 0;
+static uint_fast32_t g_seed1 = 0;
+static uint_fast32_t g_seed2 = 0;
+static uint_fast32_t g_seed3 = 0;
+static uint_fast32_t rand_id = 0;
+static float mr[MAXM];
+
+float FAST_RAND(void) {
+        return mr[rand_id++];
+}
+
+float FAST_RAND_INTERNAL0(void) {
+        g_seed0 = 214013*g_seed0+2531011;
+        return ((g_seed0>>16)&0x7FFF)/MAXRAND;
+}
+
+float FAST_RAND_INTERNAL1(void) {
+        g_seed1 = 214013*g_seed1+2531011;
+        return ((g_seed1>>16)&0x7FFF)/MAXRAND;
+}
+
+float FAST_RAND_INTERNAL2(void) {
+        g_seed2 = 214013*g_seed2+2531011;
+        return ((g_seed2>>16)&0x7FFF)/MAXRAND;
+}
+
+float FAST_RAND_INTERNAL3(void) {
+        g_seed3 = 214013*g_seed3+2531011;
+        return ((g_seed3>>16)&0x7FFF)/MAXRAND;
+}
+
+void fast_srand(int seed) {
+        g_seed0 = seed+1;
+        g_seed1 = seed+2;
+        g_seed2 = seed+3;
+        g_seed3 = seed+4;
+        for(int i=0; i<MAXM; i+=4) {
+                mr[i+0] = FAST_RAND_INTERNAL0();
+                mr[i+1] = FAST_RAND_INTERNAL1();
+                mr[i+2] = FAST_RAND_INTERNAL2();
+                mr[i+3] = FAST_RAND_INTERNAL3();
+        }
 }
 
 #endif

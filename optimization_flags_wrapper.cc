@@ -11,8 +11,8 @@ vector<string> compiler_flags =
  "-fcx-limited-range", "-fexcess-precision=fast", "-freciprocal-math",
  "-ffinite-math-only", "-fno-signed-zeros",
  "-fno-trapping-math", "-frounding-math", "-fsignaling-nans", "-ffast-math",
- "-funroll-loops", "-funroll-all-loops", "-fpeel-loops", "-flto", "-O1", "-O2",
- "-O3", "-Ofast"};
+ "-funroll-loops", "-funroll-all-loops", "-fpeel-loops", "-flto", "-ftree-vectorize", "-fno-tree-loop-vectorize",
+ "-fprefetch-loop-arrays", "-ftree-parallelize-loops", "-mfmaf", "-mrecip", "-msse2", "-mvis3"};
 
 vector<string> compiler_flags_full =
 {"-funroll-loops", "-funroll-all-loops", "-fpeel-loops", "-flto", "-fauto-inc-dec", "-fbranch-count-reg",
@@ -64,8 +64,7 @@ float compiler_with(const vector<string>& flags)
     while (command != ">>") {
         fs >> command;
     }
-    fs >> command;
-    fs >> ms;
+    fs >> command >> ms;
 
     return ms;
 }
@@ -82,9 +81,8 @@ void print_vector(const vector<string>& vs)
     cout << endl;
 }
 
-void seleccion()
+void seleccion(vector<string>& next_step)
 {
-    vector<string> next_step(compiler_flags);
     vector<pair<float, vector<string> > > results;
 
     float minimal = compiler_with(next_step);
@@ -136,14 +134,18 @@ void seleccion()
 int main(void)
 {
     cout << "Compilaciones falsas" << flush;
-    for (int i = 0; i < 5; i++) {
+    for (int i = 0; i < 3; i++) {
         compiler_with({});
         cout << '.' << flush;
     }
     cout << endl;
 
     cout << "Comienzo seleccion de flags" << endl;
-    seleccion();
+    for (auto Oflag:{"", "-O1", "-O2", "-O3", "-Ofast"}) {
+        vector<string> v(compiler_flags);
+        v.push_back(Oflag);
+        seleccion(v);
+    }
 
     system("make clean > /dev/null && rm report.out");
 

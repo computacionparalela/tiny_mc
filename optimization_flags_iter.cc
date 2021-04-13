@@ -8,7 +8,8 @@ vector<string> compiler_flags =
  "-fcx-limited-range", "-fexcess-precision=fast", "-freciprocal-math",
  "-ffinite-math-only", "-fno-signed-zeros",
  "-fno-trapping-math", "-frounding-math", "-fsignaling-nans", "-ffast-math",
- "-funroll-loops", "-funroll-all-loops", "-fpeel-loops", "-flto"};
+ "-funroll-loops", "-funroll-all-loops", "-fpeel-loops", "-flto", "-ftree-vectorize",
+ "-fprefetch-loop-arrays", "-mfmaf", "-mrecip", "-msse2", "-mvis3"};
 
 vector<string> compiler_flags_full =
 {"-funroll-loops", "-funroll-all-loops", "-fpeel-loops", "-flto", "-fauto-inc-dec", "-fbranch-count-reg",

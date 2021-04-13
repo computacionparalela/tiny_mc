@@ -98,17 +98,16 @@ int main(void)
                 printf("# Absorption = %8.3f/cm\n", MU_A);
                 printf("# Photons    = %8d\n#\n", PHOTONS);
         }
-        // configure RNG
-        fast_srand(SEED);
 
         // first run
         memset(heat,0,sizeof(float)*SHELLS);
         memset(heat2,0,sizeof(float)*SHELLS);
-        photon();
 
         // start timer
         double start = wtime();
-        // simulation
+        // configure RNG
+        fast_srand(SEED);
+		// simulation
         for (int i = 0; i < PHOTONS; ++i) {
                 photon();
         }
