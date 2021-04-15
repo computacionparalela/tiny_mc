@@ -3,13 +3,32 @@
 #define MAXN 2147483647
 using namespace std;
 
+#ifdef GCC
+vector<string> Oflags = {"-O0", "-O1", "-O2", "-O3", "-Ofast"};
 vector<string> compiler_flags =
 {"-fno-math-errno", "-funsafe-math-optimizations", "-ffinite-math-only", "-fno-rounding-math", "-fno-signaling-nans",
- "-fcx-limited-range", "-fexcess-precision=fast", "-freciprocal-math",
- "-ffinite-math-only", "-fno-signed-zeros",
- "-fno-trapping-math", "-frounding-math", "-fsignaling-nans", "-ffast-math",
- "-funroll-loops", "-funroll-all-loops", "-fpeel-loops", "-flto",
- "-fprefetch-loop-arrays", "-mfma", "-mrecip", "-msse2"};
+ "-fcx-limited-range", "-fexcess-precision=fast", "-freciprocal-math", "-ffinite-math-only", "-fno-signed-zeros",
+ "-fno-trapping-math", "-frounding-math", "-fsignaling-nans", "-ffast-math", "-funroll-loops", "-funroll-all-loops",
+ "-fpeel-loops", "-flto", "-fprefetch-loop-arrays", "-mfma", "-mrecip", "-msse2"};
+string make_command("make clean > /dev/null && make CC=gcc-10 ");
+#endif
+
+#ifdef CLANG
+vector<string> Oflags = {"-O0", "-O1", "-O2", "-O3"};
+vector<string> compiler_flags =
+{"-fno-math-errno", "-funsafe-math-optimizations", "-ffinite-math-only", "-freciprocal-math", "-ffinite-math-only",
+ "-fno-signed-zeros", "-fno-trapping-math", "-ffast-math", "-funroll-loops", "-flto", "-mfma", "-mrecip", "-msse2"};
+string make_command("make clean > /dev/null && make CC=clang-11 ");
+#endif
+
+#ifdef INTEL
+vector<string> Oflags = {"-O0", "-O1", "-O2", "-O3"};
+vector<string> compiler_flags =
+{"-parallel", "-m64", "-qopenmp-offload", "-qopenmp", "-qopt-report", "-qopt-prefetch", "-fimf-precision=simple",
+ "-no-prec-sqrt", "-no-prec-div", "-Istd", "-Istdi", "-Lstd", "-march=native", "-fp-speculation",
+ "-fast-transcendentals"};
+string make_command("make clean > /dev/null && make CC=icc ");
+#endif
 
 float compiler_with(const vector<string>& flags)
 {
@@ -20,8 +39,7 @@ float compiler_with(const vector<string>& flags)
         compile_opt.push_back(' ');
     }
     // Execute the program and save the output at report.out
-    command = string("make clean > /dev/null && make ") + compile_opt +
-              string("\" > /dev/null");
+    command = make_command + compile_opt + string("\" > /dev/null");
     system(command.c_str());
     command = string("./run.sh > report.out");
     sleep(1);
@@ -54,7 +72,7 @@ void seleccion(vector<string>& next_step)
     vector<pair<float, vector<string> > > results;
 
     float minimal = compiler_with(next_step);
-    //cout << "Ms: " << minimal << "\tFlags: "; print_vector(next_step);
+    // cout << "Ms: " << minimal << "\tFlags: "; print_vector(next_step);
     results.push_back({minimal, next_step});
 
     while (!next_step.empty()) {
@@ -77,7 +95,7 @@ void seleccion(vector<string>& next_step)
                 next_step = new_step;
             }
         }
-        //cout << "Ms: " << minimal << "\tFlags: "; print_vector(next_step);
+        // cout << "Ms: " << minimal << "\tFlags: "; print_vector(next_step);
         results.push_back({minimal, next_step});
     }
 
@@ -92,17 +110,18 @@ void seleccion(vector<string>& next_step)
     cout << "\n****Best Time:\tMs: " << minimal << "\tFlags: ";
     print_vector(next_step);
     /*
-    cout << "All results:" << endl;
-    sort(results.begin(), results.end());
-    reverse(results.begin(), results.end());
-    for (auto p:results) {
+       cout << "All results:" << endl;
+       sort(results.begin(), results.end());
+       reverse(results.begin(), results.end());
+       for (auto p:results) {
         cout << "Ms: " << p.first << "\tFlags: "; print_vector(p.second);
-    }
-    */
+       }
+     */
 }
 
 int main(void)
 {
+    //~ system(". /opt/intel/oneapi/setvars.sh");
     cout << "Compilaciones falsas" << flush;
     for (int i = 0; i < 5; i++) {
         compiler_with({});
@@ -111,7 +130,7 @@ int main(void)
     cout << endl;
 
     cout << "Comienzo seleccion de flags" << endl;
-    for (auto Oflag:{"", "-O1", "-O2", "-O3", "-Ofast"}) {
+    for (auto Oflag:Oflags) {
         vector<string> v(compiler_flags);
         v.push_back(Oflag);
         seleccion(v);

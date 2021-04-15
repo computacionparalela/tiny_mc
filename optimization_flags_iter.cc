@@ -3,38 +3,31 @@
 #include "t_test.h"
 using namespace std;
 
+#ifdef GCC
+vector<string> Oflags = {"-O0", "-O1", "-O2", "-O3", "-Ofast"};
+vector<string> compiler_flags =
+{"-fno-math-errno", "-funsafe-math-optimizations", "-ffinite-math-only", "-fno-rounding-math", "-fno-signaling-nans",
+ "-fcx-limited-range", "-fexcess-precision=fast", "-freciprocal-math", "-ffinite-math-only", "-fno-signed-zeros",
+ "-fno-trapping-math", "-frounding-math", "-fsignaling-nans", "-ffast-math", "-funroll-loops", "-funroll-all-loops",
+ "-fpeel-loops", "-flto", "-fprefetch-loop-arrays", "-mfma", "-mrecip", "-msse2"};
+string make_command("make clean > /dev/null && make CC=gcc-10 ");
+#endif
+
+#ifdef CLANG
+vector<string> Oflags = {"-O0", "-O1", "-O2", "-O3"};
 vector<string> compiler_flags =
 {"-fno-math-errno", "-funsafe-math-optimizations", "-ffinite-math-only", "-freciprocal-math", "-ffinite-math-only",
  "-fno-signed-zeros", "-fno-trapping-math", "-ffast-math", "-funroll-loops", "-flto", "-mfma", "-mrecip", "-msse2"};
+string make_command("make clean > /dev/null && make CC=clang-11 ");
+#endif
 
-vector<string> compiler_flags_full =
-{"-funroll-loops", "-funroll-all-loops", "-fpeel-loops", "-flto", "-fauto-inc-dec", "-fbranch-count-reg",
- "-fcombine-stack-adjustments", "-fcompare-elim", "-fcprop-registers", "-fdce", "-fdefer-pop", "-fdelayed-branch",
- "-fdse", "-fforward-propagate", "-fguess-branch-probability", "-fif-conversion", "-fif-conversion2",
- "-finline-functions-called-once", "-fipa-profile", "-fipa-pure-const", "-fipa-reference",
- "-fipa-reference-addressable", "-fmerge-constants", "-fmove-loop-invariants", "-fomit-frame-pointer",
- "-freorder-blocks", "-fshrink-wrap", "-fshrink-wrap-separate", "-fsplit-wide-types", "-fssa-backprop",
- "-fssa-phiopt", "-ftree-bit-ccp", "-ftree-ccp", "-ftree-ch", "-ftree-coalesce-vars", "-ftree-copy-prop",
- "-ftree-dce", "-ftree-dominator-opts", "-ftree-dse", "-ftree-forwprop", "-ftree-fre", "-ftree-phiprop",
- "-ftree-pta", "-ftree-scev-cprop", "-ftree-sink", "-ftree-slsr", "-ftree-sra", "-ftree-ter", "-funit-at-a-time",
- "-falign-functions", "-falign-jumps", "-falign-labels", "-falign-loops", "-fcaller-saves", "-fcode-hoisting",
- "-fcrossjumping", "-fcse-follow-jumps", "-fcse-skip-blocks", "-fdelete-null-pointer-checks", "-fdevirtualize",
- "-fdevirtualize-speculatively", "-fexpensive-optimizations", "-ffinite-loops", "-fgcse", "-fgcse-lm",
- "-fhoist-adjacent-loads", "-finline-functions", "-finline-small-functions", "-findirect-inlining", "-fipa-bit-cp",
- "-fipa-cp", "-fipa-icf", "-fipa-ra", "-fipa-sra", "-fipa-vrp", "-fisolate-erroneous-paths-dereference",
- "-flra-remat", "-foptimize-sibling-calls", "-foptimize-strlen", "-fpartial-inlining", "-fpeephole2",
- "-freorder-blocks-algorithm=stc", "-freorder-blocks-and-partition", "-freorder-functions", "-frerun-cse-after-loop",
- "-fschedule-insns", "-fschedule-insns2", "-fsched-interblock", "-fsched-spec", "-fstore-merging",
- "-fstrict-aliasing", "-fthread-jumps", "-ftree-builtin-call-dce", "-ftree-pre", "-ftree-switch-conversion",
- "-ftree-tail-merge", "-ftree-vrp", "-fgcse-after-reload", "-fipa-cp-clone", "-floop-interchange",
- "-floop-unroll-and-jam", "-fpeel-loops", "-fpredictive-commoning", "-fsplit-loops", "-fsplit-paths",
- "-ftree-loop-distribution", "-ftree-loop-vectorize", "-ftree-partial-pre", "-ftree-slp-vectorize",
- "-funswitch-loops", "-fvect-cost-model", "-fvect-cost-model=dynamic", "-fversion-loops-for-strides",
- "-falign-functions", "-falign-jumps", "-falign-labels", "-falign-loops", "-fprefetch-loop-arrays",
- "-freorder-blocks-algorithm=stc", "-fallow-store-data-races", "-fno-math-errno",
- "-funsafe-math-optimizations", "-ffinite-math-only", "-fno-rounding-math", "-fno-signaling-nans",
- "-fcx-limited-range", "-fexcess-precision=fast", "-freciprocal-math", "-ffinite-math-only", "-fno-signed-zeros",
- "-fno-trapping-math", "-frounding-math", "-fsignaling-nans", ""};
+#ifdef INTEL
+vector<string> Oflags = {"-O0", "-O1", "-O2", "-O3"};
+vector<string> compiler_flags =
+{"-parallel", "-m64", "-qopenmp-offload", "-qopenmp", "-qopt-prefetch", "-fimf-precision=simple",
+ "-no-prec-sqrt", "-no-prec-div", "-Istd", "-Istdi", "-Lstd", "-fast-transcendentals"};
+string make_command("make clean > /dev/null && make CC=icc ");
+#endif
 
 vector<float> compiler_with(const vector<string>& flags)
 {
@@ -45,10 +38,9 @@ vector<float> compiler_with(const vector<string>& flags)
         compile_opt.push_back(' ');
     }
     // Execute the program and save the output at report.out
-    command = string("make clean > /dev/null && make CC=clang-11") + compile_opt +
-              string("\" > /dev/null");
+    command = make_command + compile_opt + string("\" > /dev/null");
     system(command.c_str());
-    command = string("./run_iter.sh > report.out");
+    command = string("./run.sh > report.out");
     sleep(1);
     system(command.c_str());
     // Clean the output and get the average runtime
@@ -115,6 +107,7 @@ void seleccion(vector<string>& state)
 
 int main(void)
 {
+    //~ system(". /opt/intel/oneapi/setvars.sh");
     cout << "Compilaciones falsas" << flush;
     for (int i = 0; i < 5; i++) {
         compiler_with({});
@@ -123,7 +116,7 @@ int main(void)
     cout << endl;
 
     cout << "Comienzo seleccion de flags" << endl;
-    for (auto Oflag:{"-O1", "-O2", "-O3", "-Ofast"}) {
+    for (auto Oflag:Oflags) {
         vector<string> v(compiler_flags);
         v.push_back(Oflag);
         seleccion(v);
