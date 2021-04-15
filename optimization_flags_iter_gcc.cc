@@ -48,11 +48,11 @@ vector<float> compiler_with(const vector<string>& flags)
         compile_opt.push_back(' ');
     }
     // Execute the program and save the output at report.out
-    command = string("make clean > /dev/null && make ") + compile_opt +
+    command = string("make clean > /dev/null && make CC=gcc-10") + compile_opt +
               string("\" > /dev/null");
     system(command.c_str());
     command = string("./run_iter.sh > report.out");
-    sleep(3);
+    sleep(1);
     system(command.c_str());
     // Clean the output and get the average runtime
     float ms = 0;

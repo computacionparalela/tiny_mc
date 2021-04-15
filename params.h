@@ -98,7 +98,6 @@ double FAST_RAND() {
 // * https://stackoverflow.com/questions/44960864/analysis-of-linear-congruential-generator-is-wrong
 #define MAXRAND 32767.0f
 static uint_fast32_t g_seed = 0;
-unsigned int cnt_rand = 0;
 
 void fast_srand(int seed) {
         g_seed = seed;
@@ -244,5 +243,4 @@ void fast_srand(int seed) {
 float FAST_RAND(void) {
         return genRand(&internal_r);
 }
-
 #endif

@@ -10,10 +10,8 @@ Answer t_test(const std::vector<float>& base,const std::vector<float>& step, boo
 
         assert(base.size()==step.size());
 
-        //Valor correspondiente a la tabla 5.6 para 95% de confianza y 9 grados de libertad.
         //Libro de Mitchell, sección 5.6, p.145.
-        //float table_t_value = 2.101;
-
+        
         float mean = 0.0, sd = 0.0, t_value = 0.0;
         float mean_1 = 0.0, mean_2 = 0.0, sd_1 = 0.0, sd_2 = 0.0;
         float size = base.size();

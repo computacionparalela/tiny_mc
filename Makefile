@@ -1,8 +1,8 @@
 # Compilers
-CC = gcc-10
+CC = gcc
 
 # Flags
-OPT_FLAGS = -Ofast #-fprofile-use -fprofile-generate
+OPT_FLAGS = -Ofast #-fprofile-use -fprofile-generate/-prof-gen -prof-use
 CFLAGS = -std=c11 -Wall -Wextra -Wshadow -DRAND3 -DSEED=777 -DVERBOSE -march=native $(OPT_FLAGS)
 LDFLAGS = -lm
 
