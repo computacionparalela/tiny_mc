@@ -244,3 +244,43 @@ float FAST_RAND(void) {
         return genRand(&internal_r);
 }
 #endif
+
+#ifdef RAND6
+#include <stdint.h>
+#define MAXRAND 4294967296.0f
+
+static unsigned int __seed;
+
+void fast_srand(unsigned int seed) {
+        __seed = seed;
+}
+
+float FAST_RAND(void)
+{
+        unsigned int x = __seed;
+        x ^= x << 13;
+        x ^= x >> 17;
+        x ^= x << 5;
+        __seed = x;
+        return x / MAXRAND;
+}
+
+#endif
+
+#ifdef RAND7
+#include <stdio.h>
+#define MAXRAND 4294967296.0f
+//https://en.wikipedia.org/wiki/Lehmer_random_number_generator
+static long long unsigned int __seed;
+
+void fast_srand(long long unsigned int seed) {
+        __seed = seed;
+}
+
+float FAST_RAND(void)
+{
+        __seed *= 0xda942042e4dd58b5ull;
+        return (__seed >> 32)/MAXRAND;
+}
+
+#endif

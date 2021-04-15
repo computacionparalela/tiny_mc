@@ -4,7 +4,7 @@
 using namespace std;
 
 #ifdef GCC
-vector<string> Oflags = {"-O0", "-O1", "-O2", "-O3", "-Ofast"};
+vector<string> Oflags = {"-O1", "-O2", "-O3", "-Ofast"};
 vector<string> compiler_flags =
 {"-fno-math-errno", "-funsafe-math-optimizations", "-ffinite-math-only", "-fno-rounding-math", "-fno-signaling-nans",
  "-fcx-limited-range", "-fexcess-precision=fast", "-freciprocal-math", "-ffinite-math-only", "-fno-signed-zeros",
@@ -121,7 +121,7 @@ void seleccion(vector<string>& next_step)
 
 int main(void)
 {
-    //~ system(". /opt/intel/oneapi/setvars.sh");
+    // ~ system(". /opt/intel/oneapi/setvars.sh");
     cout << "Compilaciones falsas" << flush;
     for (int i = 0; i < 5; i++) {
         compiler_with({});
