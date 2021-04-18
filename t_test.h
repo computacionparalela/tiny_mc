@@ -11,7 +11,7 @@ Answer t_test(const std::vector<float>& base,const std::vector<float>& step, boo
         assert(base.size()==step.size());
 
         //Libro de Mitchell, sección 5.6, p.145.
-        
+
         float mean = 0.0, sd = 0.0, t_value = 0.0;
         float mean_1 = 0.0, mean_2 = 0.0, sd_1 = 0.0, sd_2 = 0.0;
         float size = base.size();
@@ -53,7 +53,7 @@ Answer t_test(const std::vector<float>& base,const std::vector<float>& step, boo
 
         if(fabs(t_value)<0.8f) {//SAME
                 return REMOVE;
-        }else if(t_value>3.0f) {//Better to remove
+        }else if(t_value<-3.0f) {//Better to remove
                 return REMOVE;
         }
         //Not sure

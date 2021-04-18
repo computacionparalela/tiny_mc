@@ -3,7 +3,7 @@
 FILE="report.out"
 TOTAL_MS=0
 TOTAL_PH=0
-ITERATIONS=20
+ITERATIONS=10
 
 echo "El programa debe estar compilado para ejecutar este script"
 for it in $(seq 1 $ITERATIONS)
@@ -15,7 +15,7 @@ do
 	LOCAL_PH=$(grep '+>>> ' "$it-$FILE" | awk -F ' ' '{print $2}')
 	TOTAL_PH=$(echo $TOTAL_PH $LOCAL_PH | awk '{printf "%5.3f\n",$1+$2}')
 	rm -f "$it-$FILE"
-	echo "> $LOCAL_MS"
+	echo "> $LOCAL_PH $LOCAL_MS"
 done
 
 TOTAL_MS=$(echo $TOTAL_MS $ITERATIONS | awk '{printf "%5.3f\n",$1/$2}')

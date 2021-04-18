@@ -76,33 +76,40 @@ void seleccion(vector<string>& state)
 {
     srand(time(NULL));
     random_shuffle(state.begin(), state.end());
-    unordered_set<string> current_state(state.begin(), state.end());
+    vector<string> current_state(state.begin(), state.end());
     bool changed;
 
+    cout << "Start with: ";
+    print_vector(current_state);
+
+    cout << "Remove: " << flush;
     do {
-        cout << "Current State: ";
-        print_vector(vector<string>(current_state.begin(), current_state.end()));
         changed = false;
-        unordered_set<string> next_state(current_state);
-        vector<float> base = compiler_with(vector<string>(current_state.begin(), current_state.end()));
+        random_shuffle(current_state.begin(), current_state.end());
+        vector<float> base = compiler_with(current_state);
         for (string flag:current_state) {
-            unordered_set<string> step(current_state);
-            step.erase(flag);
-            vector<float> rstep = compiler_with(vector<string>(step.begin(), step.end()));
+            vector<string> step(current_state.size());
+            for (string f:current_state) {
+                if (f != flag) {
+                    step.push_back(f);
+                }
+            }
+            vector<float> rstep = compiler_with(step);
             if (t_test(base, rstep, false) == REMOVE) {
-                current_state.erase(flag);
+                cout << flag << ' ' << flush;
+                current_state = step;
                 changed = true;
                 break;
             }
         }
     } while (changed);
-
-    vector<float> base = compiler_with(vector<string>(state.begin(), state.end()));
-    vector<float> rstep = compiler_with(vector<string>(current_state.begin(), current_state.end()));
+    cout << endl;
+    vector<float> base = compiler_with(state);
+    vector<float> rstep = compiler_with(current_state);
     t_test(base, rstep, true);
 
-    cout << "\n****Best Time: ";
-    print_vector(vector<string>(current_state.begin(), current_state.end()));
+    cout << "\n****Best Photons: ";
+    print_vector(current_state);
 }
 
 int main(void)
@@ -120,6 +127,7 @@ int main(void)
         vector<string> v(compiler_flags);
         v.push_back(Oflag);
         seleccion(v);
+        cout << endl;
     }
 
     system("make clean > /dev/null && rm report.out");
