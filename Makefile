@@ -2,8 +2,8 @@
 CC = gcc-10
 
 # Flags
-OPT_FLAGS = -Ofast -ftree-vectorize -ftree-loop-optimize -ftree-loop-vectorize -faligned-new -msse -msse2 -mssse3 -msse4.1 -msse4.2 -mavx -mavx2 -mfma -flto
-CFLAGS = -std=c11 -Wall -Wextra -Wshadow -DRAND7 -DVERBOSE -march=native $(OPT_FLAGS) $(PHOTONS)
+OPT_FLAGS = -O0 -ffast-math -fno-signaling-nans -funroll-loops -fno-signed-zeros -fpeel-loops -freciprocal-math
+CFLAGS = -std=c11 -Wall -Wextra -Wshadow -DRAND7 -DVERBOSE -march=native $(OPT_FLAGS)
 LDFLAGS = -lm
 
 # Binary file

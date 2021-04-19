@@ -3,7 +3,7 @@
 FILE="report.out"
 TOTAL_MS=0
 TOTAL_PH=0
-ITERATIONS=10
+ITERATIONS=5
 
 echo "El programa debe estar compilado para ejecutar este script"
 for it in $(seq 1 $ITERATIONS)
