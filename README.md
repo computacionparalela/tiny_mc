@@ -11,16 +11,28 @@ El código realiza simulaciones de propagación de luz, a partir de una fuente p
 
 Las ejecuciones se realizaron sobre una notebook Asus vivobook S14 con las siguiente prestaciones:
 
-``
+
+```
+
 	Ubuntu 18.04.5 LTS
+
 	Kernel 5.4.0-72-generic
+
 	Intel(R) Core(TM) i7-8550U CPU @ 1.80GHz x 8
+
 	16 GB de RAM DDR4 2400 MT/s 64 bits band-width
+
 	Compiladores: GCC 10.1.0 | CLANG 11.1.0 | ICC 2021.2.0
-``
+
+```
+
 Sobre este equipo se ejecutó el programa Empirical Roofline Toolkit obteniendo los siguientes resultados:
 
-![Empirical Roofline Toolkit](https://github.com/adam-p/markdown-here/raw/master/src/common/images/icon48.png "Grafico ERT")
+![Empirical Roofline Toolkit](https://raw.githubusercontent.com/barufa/tiny_mc/main/Imagenes/image9.jpg "Grafico ERT con varios hilo")
+
+Y al ejecutarlo para un solo hilo nos queda:
+
+![Empirical Roofline Toolkit](https://raw.githubusercontent.com/barufa/tiny_mc/main/Imagenes/image7.jpg "Grafico ERT con un solo hilo")
 
 
 ## Métrica utilizada
@@ -59,13 +71,13 @@ este problema.
 En machine learning el método wrapper evalúa subconjuntos de variables para determinar
 una combinación adecuada para el problema que se quiere resolver.
 
-![Metodo de seleccion de variables Wrapper](https://github.com/adam-p/markdown-here/raw/master/src/common/images/icon48.png "Wrapper")
+![Metodo de seleccion de variables Wrapper](https://raw.githubusercontent.com/barufa/tiny_mc/main/Imagenes/image3.png "Wrapper")
 
 Dentro de nuestro problema, las variables son representadas por las distintas banderas del
 compilador y el rendimiento está dado por el archivo binario. Para facilitar la comprensión
 del mismo se proporciona el siguiente ejemplo:
 
-![Espacio de busqueda](https://github.com/adam-p/markdown-here/raw/master/src/common/images/icon48.png "Espacio de busqueda")
+![Espacio de busqueda](https://raw.githubusercontent.com/barufa/tiny_mc/main/Imagenes/image1.png "Espacio de busqueda")
 
 En este caso se trabaja con un espacio de 4 banderas de compilación. El punto inicial es un
 estado que cuenta con todas las banderas habilitadas y en cada paso se trata de quitar una
@@ -89,7 +101,7 @@ ampliamente los tiempos pertinentes a la exploración.
 En el siguiente gráfico podemos ver los resultados obtenidos para las distintas
 combinaciones de banderas de optimización a través del método presentado.
 
-![Comparacion de compiladores](https://github.com/adam-p/markdown-here/raw/master/src/common/images/icon48.png "Compiladores")
+![Comparacion de compiladores](https://raw.githubusercontent.com/barufa/tiny_mc/main/Imagenes/image6.png "Compiladores")
 
 | Compilador | NONE    | O0+     | O1+     | O2+     | O3+     | Ofast+  |
 | ---------- |:-------:| -------:| -------:| -------:| -------:| -------:|
@@ -98,22 +110,25 @@ combinaciones de banderas de optimización a través del método presentado.
 | ICC        | 492.891 | 200.372 | 632.288 | 494.507 | 497.35  | -       |
 
 Las banderas obtenidas en cada caso fueron:
-* GCC:
-⋅⋅* O0+: -ffast-math -funroll-loops -fpeel-loops -march=native
-⋅⋅* O1+: -ffast-math -funroll-loops -fprefetch-loop-arrays -fpeel-loops -march=native
-⋅⋅* O2+: -funroll-loops  -ffast-math -fprefetch-loop-arrays -fpeel-loops -flto -march=native
-⋅⋅* O3+: -ffast-math -flto -funroll-loops -fpeel-loops -march=native
-⋅⋅* Ofast+: -funroll-all-loops -flto -march=native
-* CLANG:
-⋅⋅* O0+: -funroll-loops -flto -ffast-math -march=native
-⋅⋅* O1+: -funroll-loops -flto -funsafe-math-optimizations -ffinite-math-only -freciprocal-math -fno-math-errno -march=native
-⋅⋅* O2+:  -ffast-math -funroll-loops -flto - march=native
-⋅⋅* O3+: -funroll-loops -flto -ffast-math -march=native
-* ICC:
-⋅⋅* O0+: -qopenmp-offload -march=native -fast-transcendentals -parallel -fimf-precision=simple -qopt-prefetch -no-prec-div -no-prec-sqrt -qopenmp -fp-speculation
-⋅⋅* O1+: -qopenmp-offload -march=native -fast-transcendentals -parallel -fimf-precision=simple -qopt-prefetch -no-prec-div -no-prec-sqrt -qopenmp
-⋅⋅* O2+: -qopenmp-offload -march=native -fast-transcendentals
-⋅⋅* O3+: -qopenmp-offload -march=native -parallel -fimf-precision=simple -qopt-prefetch -no-prec-div -no-prec-sqrt -fp-speculation
+
+1. GCC:
+* O0+: -ffast-math -funroll-loops -fpeel-loops -march=native
+* O1+: -ffast-math -funroll-loops -fprefetch-loop-arrays -fpeel-loops -march=native
+* O2+: -funroll-loops  -ffast-math -fprefetch-loop-arrays -fpeel-loops -flto -march=native
+* O3+: -ffast-math -flto -funroll-loops -fpeel-loops -march=native
+* Ofast+: -funroll-all-loops -flto -march=native
+
+2. CLANG:
+* O0+: -funroll-loops -flto -ffast-math -march=native
+* O1+: -funroll-loops -flto -funsafe-math-optimizations -ffinite-math-only -freciprocal-math -fno-math-errno -march=native
+* O2+:  -ffast-math -funroll-loops -flto - march=native
+* O3+: -funroll-loops -flto -ffast-math -march=native
+
+3. ICC:
+* O0+: -qopenmp-offload -march=native -fast-transcendentals -parallel -fimf-precision=simple -qopt-prefetch -no-prec-div -no-prec-sqrt -qopenmp -fp-speculation
+* O1+: -qopenmp-offload -march=native -fast-transcendentals -parallel -fimf-precision=simple -qopt-prefetch -no-prec-div -no-prec-sqrt -qopenmp
+* O2+: -qopenmp-offload -march=native -fast-transcendentals
+* O3+: -qopenmp-offload -march=native -parallel -fimf-precision=simple -qopt-prefetch -no-prec-div -no-prec-sqrt -fp-speculation
 
 En todos los casos, None hace referencia a la compilación sin el agregado de ninguna bandera.
 
@@ -126,7 +141,7 @@ Por último, es posible notar que el mejor rendimiento usando ICC se alcanzó co
 
 ## Relación lineal entre fotones y tiempo
 
-![Grafico tiempo y cantidad de fotones](https://github.com/adam-p/markdown-here/raw/master/src/common/images/icon48.png "Grafico tiempo y cantidad de fotones")
+![Grafico tiempo y cantidad de fotones](https://raw.githubusercontent.com/barufa/tiny_mc/main/Imagenes/image5.png "Grafico tiempo y cantidad de fotones")
 
 En este gráfico se puede ver que el orden del problema es lineal respecto al número de fotones. Esto es así ya que la memoria requerida por el programa permanece constante a lo largo del mismo y al aumentar la cantidad de fotones solo incrementa el procesamiento.
 
@@ -135,9 +150,9 @@ En este gráfico se puede ver que el orden del problema es lineal respecto al n�
 
 Se ejecutó con la versión original y la versión optimizada del programa con Perf para realizar una comparación entre ellas.
 
-![Imagen Perf Original](https://github.com/adam-p/markdown-here/raw/master/src/common/images/icon48.png "Imagen Perf Original")
+![Imagen Perf Original](https://raw.githubusercontent.com/barufa/tiny_mc/main/Imagenes/image4.png "Imagen Perf Original")
 
-![Imagen Perf Optimizado](https://github.com/adam-p/markdown-here/raw/master/src/common/images/icon48.png "Imagen Perf Optimizado")
+![Imagen Perf Optimizado](https://raw.githubusercontent.com/barufa/tiny_mc/main/Imagenes/image2.png "Imagen Perf Optimizado")
 
 Podemos ver que la mayor diferencia entre las ejecuciones radica en la cantidad de instrucciones ejecutadas, la cual se reduce un 71,66%. Esta reducción se traduce en un decremento en los tiempos de ejecución en un 72,94% y un incremento cercano al 305,13% en el número de fotones procesados por segundo.
 
