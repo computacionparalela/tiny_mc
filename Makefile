@@ -18,10 +18,11 @@ all: $(TARGET)
 
 $(TARGET): $(C_OBJS)
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+	./ispc/ispc --opt=fast-math --opt=fast-masked-vload --opt=force-aligned-memory --target-os=linux -O3 --math-lib=fast --addressing=64 --target=avx2-i32x16 --pic ispc/tiny_mc.ispc -o ispc/tiny_mc_ispc.o
+	g++-11 ispc/tiny_mc_ispc.o ispc/tiny_mc_main.cpp ispc/tiny_mc_ispc.h wtime.c wtime.h params.h -march=native -Ofast -DVERBOSE -o "ispc/$(TARGET)"
 
 clean_gcda:
 	rm -f *.gcda
 
 clean:
-	rm -f $(TARGET) *.o
-
+	rm -f $(TARGET) *.o "ispc/$(TARGET)"
