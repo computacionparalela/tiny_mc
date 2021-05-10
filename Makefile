@@ -36,4 +36,4 @@ clean_gcda:
 	rm -f *.gcda
 
 clean:
-	rm -f $(TARGET) *.o "ispc/$(TARGET)" tiny_mc_m256 tiny_mc_ispc *.gch
+	rm -f $(TARGET) *.o "ispc/$(TARGET)" tiny_mc_m256 tiny_mc_ispc *.gch ispc/*.o
