@@ -6,17 +6,13 @@
 #define MICRONS_PER_SHELL 50
 #define SHELLS_PER_MFP (1e4 / MICRONS_PER_SHELL / (MU_A + MU_S))
 
-static inline float __rnd(unsigned int &number) {
+static inline float rnd(unsigned int &number) {
 	unsigned int x = number;
 	x ^= x << 13;
 	x ^= x >> 17;
 	x ^= x << 5;
 	number = x;
-	return number;
-}
-
-static inline float rnd(unsigned int &number) {
-	return __rnd(number) / MAXRAND;
+	return number / MAXRAND;
 }
 
 static void photonT2(uniform float heat[], uniform float heat2[], uniform unsigned int seed[], uniform int gang_counter)

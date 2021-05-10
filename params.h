@@ -7,7 +7,7 @@
 #endif
 
 #ifndef PHOTONS
-#define PHOTONS 32768 // 32K photons
+#define PHOTONS 1310720 // 32K photons
 #endif
 
 #ifndef MU_A
@@ -32,6 +32,7 @@ static const unsigned verbose = 0;
 static const unsigned verbose = 1;
 #endif
 
+#ifndef M256
 #ifdef RAND0
 #include <stdlib.h>
 
@@ -283,4 +284,5 @@ float FAST_RAND(void)
         return (__seed >> 32)/MAXRAND;
 }
 
+#endif
 #endif

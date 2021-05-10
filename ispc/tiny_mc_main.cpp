@@ -33,8 +33,8 @@
 
 #define _XOPEN_SOURCE 500  // M_PI
 
-#include "params.h"
-#include "wtime.h"
+#include "../params.h"
+#include "../wtime.h"
 
 #include <assert.h>
 #include <math.h>

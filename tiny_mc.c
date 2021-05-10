@@ -30,6 +30,14 @@ static float heat[SHELLS];
 static float heat2[SHELLS];
 
 
+static inline float fastlog(float x)
+{
+  union { float f; unsigned int i; } vx = { x };
+  float y = vx.i;
+  y *= 8.2629582881927490e-8f;
+  return y - 87.989971088f;
+}
+
 /***
  * Photon
  ***/
@@ -50,7 +58,7 @@ static void photon(void)
 
         for (;;) {
                 /* Step 2: Step size selection and photon packet movement */
-                float t = -logf(FAST_RAND());
+                float t = -fastlog(FAST_RAND());
                 /* move */
                 x += t * u;
                 y += t * v;
