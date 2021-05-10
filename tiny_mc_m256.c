@@ -28,7 +28,7 @@ char t3[] = "CPU version, adapted for PEAGPGPU by Gustavo Castellano"
 // global state, heat and heat square in each shell
 static float heat[SHELLS];
 static float heat2[SHELLS];
-static float seed[32];
+static float seed[32];//Avoid buffer overflow
 
 
 /***
@@ -38,60 +38,15 @@ static float seed[32];
 #define ALBEDO (MU_S / (MU_S + MU_A))
 #define SHELLS_PER_MFP (1e4 / MICRONS_PER_SHELL / (MU_A + MU_S))
 
-void print256_num_f(__m256 var, char *name)
-{
-        float *val = (float *)&var;
-        printf("%s: %f %f %f %f %f %f %f %f \n", name,
-               val[0], val[1], val[2], val[3], val[4], val[5],
-               val[6], val[7]);
-}
-
-void print256_num_uint(__m256 var, char *name)
-{
-        uint32_t *val = (uint32_t *)&var;
-        printf("%s: %u %u %u %u %u %u %u %u \n", name,
-               val[0], val[1], val[2], val[3], val[4], val[5],
-               val[6], val[7]);
-}
-
-void print256_entero_uint(__m256i var, char *name)
-{
-        uint32_t *val = (uint32_t *)&var;
-        printf("%s: %u %u %u %u %u %u %u %u \n", name,
-               val[0], val[1], val[2], val[3], val[4], val[5],
-               val[6], val[7]);
-}
-
 static inline __m256 _m256_flog(__m256 x)
 {
-        union {
-                __m256 f;
-                __m256i i;
-        } vx = {x};
-
-        __m256i mask_and = _mm256_set1_epi32(0x007FFFFF);
-        __m256i mask_or = _mm256_set1_epi32(0x3f000000);
-
-        union {
-                __m256 f;
-                __m256i i;
-        } mx = {_mm256_or_si256(_mm256_and_si256(vx.i, mask_and), mask_or)};
-
-        __m256 y = _mm256_cvtepi32_ps(vx.i);
-        y = _mm256_mul_ps(y, _mm256_set1_ps(1.1920928955078125e-7f));
-
-        __m256 ct1 = _mm256_set1_ps(124.22551499f);
-        __m256 ct2 = _mm256_set1_ps(1.498030302f);
-        __m256 ct3 = _mm256_set1_ps(1.72587999f);
-        __m256 ct4 = _mm256_set1_ps(0.3520887068f);
-        __m256 fst = _mm256_sub_ps(_mm256_sub_ps(y, ct1), _mm256_mul_ps(ct2, mx.f));
-        __m256 snd = _mm256_mul_ps(ct3, _mm256_rcp_ps(_mm256_add_ps(ct4, mx.f)));
-
-        return _mm256_mul_ps(_mm256_set1_ps(0.69314718f), _mm256_sub_ps(fst, snd));
+        // union { float f; unsigned int i; } vx = { x };
+        union { __m256 f; __m256i i; } vx = { x };
+        //float y = vx.i;y *= 8.2629582881927490e-8f;
+        __m256 y = _mm256_mul_ps(_mm256_cvtepi32_ps(vx.i),_mm256_set1_ps(8.2629582881927490e-8f));
+        //return y - 87.989971088f;
+        return _mm256_sub_ps(y,_mm256_set1_ps(87.989971088f));
 }
-
-static __m256 maxrand;
-static __m256 maxint;
 
 static inline __m256 _m256_rand(__m256i * _seed) {
         __m256i x = *_seed;
@@ -102,14 +57,12 @@ static inline __m256 _m256_rand(__m256i * _seed) {
         //x ^= x << 5;
         x = _mm256_xor_si256(x, _mm256_slli_epi32(x, 5));
         *_seed = x;
-        return _mm256_div_ps(_mm256_add_ps(_mm256_cvtepi32_ps(x),maxint),maxrand);
+        return _mm256_div_ps(_mm256_add_ps(_mm256_cvtepi32_ps(x),_mm256_set1_ps(2147483647.0f)),_mm256_set1_ps(4294967296.0f));
 }
 
 static void photon(int photons, float * _seed)
 {
         float lheat[8], lheat2[8], is_working[8], shellidx[8];
-        const __m256 zero = _mm256_setzero_ps();
-        const __m256 one  = _mm256_set1_ps(1.0f);
         /* Step 1: Launching a photon packet */
         //float albedo = MU_S / (MU_S + MU_A);
         const __m256 albedo =  _mm256_div_ps(_mm256_set1_ps(MU_S), _mm256_add_ps(_mm256_set1_ps(MU_S), _mm256_set1_ps(MU_A)));
@@ -117,23 +70,23 @@ static void photon(int photons, float * _seed)
         const __m256 shells_per_mfp = _mm256_div_ps(_mm256_div_ps(_mm256_set1_ps((float)1e4), _mm256_set1_ps((float)MICRONS_PER_SHELL)), _mm256_add_ps(_mm256_set1_ps(MU_A), _mm256_set1_ps(MU_S)));
 
         //float x = 0.0f;
-        __m256 x = zero;
+        __m256 x = _mm256_setzero_ps();
         //float y = 0.0f;
-        __m256 y = zero;
+        __m256 y = _mm256_setzero_ps();
         //float z = 0.0f;
-        __m256 z = zero;
+        __m256 z = _mm256_setzero_ps();
         //float u = 0.0f;
-        __m256 u = zero;
+        __m256 u = _mm256_setzero_ps();
         //float v = 0.0f;
-        __m256 v = zero;
+        __m256 v = _mm256_setzero_ps();
         //float w = 1.0f;
-        __m256 w = one;
+        __m256 w = _mm256_set1_ps(1.0f);
         //float weight = 1.0f;
-        __m256 weight = one;
+        __m256 weight = _mm256_set1_ps(1.0f);
 
         __m256i vseed  = _mm256_cvtps_epi32(_mm256_loadu_ps(_seed));
-        __m256 working;
 
+        __m256 working;
         for(int k=0; k<8; k++) {
                 photons--;
                 if(photons < 0) {
@@ -147,7 +100,7 @@ static void photon(int photons, float * _seed)
         do {
                 /* Step 2: Step size selection and photon packet movement */
                 //float t = -logf(FAST_RAND());
-                __m256 t = _mm256_sub_ps(zero, _m256_flog(_m256_rand(&vseed)));//FIX
+                __m256 t = _mm256_sub_ps(_mm256_setzero_ps(), _m256_flog(_m256_rand(&vseed)));//FIX
                 /* move */
                 //x += t * u;
                 x = _mm256_add_ps(_mm256_mul_ps(t, u), x);
@@ -159,20 +112,18 @@ static void photon(int photons, float * _seed)
                 /* Step 3: Absorption and scattering */
                 //unsigned int shell = min(sqrtf(x * x + y * y + z * z) * shell_per_mfp, SHELLS - 1); /* absorb */
                 __m256 sroot = _mm256_sqrt_ps(_mm256_add_ps(_mm256_mul_ps(x, x), _mm256_add_ps(_mm256_mul_ps(y, y), _mm256_mul_ps(z, z))));
-                __m256 shell = _mm256_add_ps(_mm256_min_ps(_mm256_floor_ps(_mm256_mul_ps(sroot, shells_per_mfp)), _mm256_sub_ps(_mm256_set1_ps(SHELLS), one)), _mm256_set1_ps(0.1f));
+                __m256 shell = _mm256_add_ps(_mm256_min_ps(_mm256_floor_ps(_mm256_mul_ps(sroot, shells_per_mfp)), _mm256_sub_ps(_mm256_set1_ps(SHELLS), _mm256_set1_ps(1.0f))), _mm256_set1_ps(0.1f));
 
                 //float _heat = (1.0f - albedo) * weight;
-                __m256 _heat = _mm256_mul_ps(_mm256_sub_ps(one,albedo), weight);
-                __m256 _heat_pw2 = _mm256_mul_ps(_heat, _heat);
+                __m256 _heat = _mm256_mul_ps(_mm256_sub_ps(_mm256_set1_ps(1.0f),albedo), weight);
 
                 _mm256_store_ps(shellidx, shell);
                 _mm256_store_ps(lheat, _heat);
-                _mm256_store_ps(lheat2, _heat_pw2);
+                _mm256_store_ps(lheat2, _mm256_mul_ps(_heat, _heat));
                 char is_alive = _mm256_movemask_ps(working);
                 for (int k = 0; k < 8; k++)
                 {
                         if((is_alive&(1<<k)) != 0) {
-                                // printf("Canal %d escribe en heat[%d]\n", k, (int)shellidx[k]);
                                 heat[(int)shellidx[k]]  += lheat[k];
                                 heat2[(int)shellidx[k]] += lheat2[k];
                         }
@@ -185,20 +136,19 @@ static void photon(int photons, float * _seed)
                 char finish_loop;
                 do {
                         //xi1 = 2.0f * FAST_RAND() - 1.0f;
-                        xi1 = _mm256_sub_ps(_mm256_mul_ps(_mm256_set1_ps(2.0f), _m256_rand(&vseed)), one);
+                        xi1 = _mm256_sub_ps(_mm256_mul_ps(_mm256_set1_ps(2.0f), _m256_rand(&vseed)), _mm256_set1_ps(1.0f));
                         //xi2 = 2.0f * FAST_RAND() - 1.0f;
-                        xi2 = _mm256_sub_ps(_mm256_mul_ps(_mm256_set1_ps(2.0f), _m256_rand(&vseed)), one);
+                        xi2 = _mm256_sub_ps(_mm256_mul_ps(_mm256_set1_ps(2.0f), _m256_rand(&vseed)), _mm256_set1_ps(1.0f));
                         //t = xi1 * xi1 + xi2 * xi2;
                         tmp = _mm256_add_ps(_mm256_mul_ps(xi1, xi1), _mm256_mul_ps(xi2, xi2));
                         t = _mm256_blendv_ps(t,tmp,loop_mask);
-                        loop_mask = _mm256_and_ps(loop_mask, _mm256_cmp_ps(one, t, _CMP_LT_OQ));
+                        loop_mask = _mm256_and_ps(loop_mask, _mm256_cmp_ps(_mm256_set1_ps(1.0f), t, _CMP_LT_OQ));
                         finish_loop = _mm256_movemask_ps(loop_mask);
                 } while (finish_loop != 0);//1.0f < t
-                // print256_num_f(t, "T values: ");
 
                 //u = 2.0f * t - 1.0f;
-                u = _mm256_sub_ps(_mm256_mul_ps(_mm256_set1_ps(2.0f), t), one);
-                q = _mm256_sqrt_ps(_mm256_div_ps(_mm256_sub_ps(one, _mm256_mul_ps(u, u)), t));
+                u = _mm256_sub_ps(_mm256_mul_ps(_mm256_set1_ps(2.0f), t), _mm256_set1_ps(1.0f));
+                q = _mm256_sqrt_ps(_mm256_div_ps(_mm256_sub_ps(_mm256_set1_ps(1.0f), _mm256_mul_ps(u, u)), t));
                 v = _mm256_mul_ps(xi1, q);
                 w = _mm256_mul_ps(xi2, q);
 
@@ -214,13 +164,13 @@ static void photon(int photons, float * _seed)
                 weight = _mm256_blendv_ps(weight,_mm256_div_ps(weight, _mm256_set1_ps(0.1f)),weight_mask);
 
                 //Update x,y,z,u,v,w,weight
-                x = _mm256_blendv_ps(x, zero, return_mask);
-                y = _mm256_blendv_ps(y, zero, return_mask);
-                z = _mm256_blendv_ps(z, zero, return_mask);
-                u = _mm256_blendv_ps(u, zero, return_mask);
-                v = _mm256_blendv_ps(v, zero, return_mask);
-                w = _mm256_blendv_ps(w, one, return_mask);
-                weight = _mm256_blendv_ps(weight, one, return_mask);
+                x = _mm256_blendv_ps(x, _mm256_setzero_ps(), return_mask);
+                y = _mm256_blendv_ps(y, _mm256_setzero_ps(), return_mask);
+                z = _mm256_blendv_ps(z, _mm256_setzero_ps(), return_mask);
+                u = _mm256_blendv_ps(u, _mm256_setzero_ps(), return_mask);
+                v = _mm256_blendv_ps(v, _mm256_setzero_ps(), return_mask);
+                w = _mm256_blendv_ps(w, _mm256_set1_ps(1.0f), return_mask);
+                weight = _mm256_blendv_ps(weight, _mm256_set1_ps(1.0f), return_mask);
 
                 char has_returned = _mm256_movemask_ps(_mm256_and_ps(working, return_mask));
                 _mm256_store_ps(is_working, working);
@@ -242,9 +192,6 @@ static void photon(int photons, float * _seed)
 
 int main(void)
 {
-        maxrand = _mm256_set1_ps(4294967296.0f);
-        maxint  = _mm256_set1_ps(2147483647.0f);
-
         if(verbose) {// heading
                 printf("# %s\n# %s\n# %s\n", t1, t2, t3);
                 printf("# Scattering = %8.3f/cm\n", MU_S);

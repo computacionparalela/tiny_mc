@@ -29,13 +29,12 @@ static unsigned int min(unsigned int x, unsigned int y){
 static float heat[SHELLS];
 static float heat2[SHELLS];
 
-
 static inline float fastlog(float x)
 {
-  union { float f; unsigned int i; } vx = { x };
-  float y = vx.i;
-  y *= 8.2629582881927490e-8f;
-  return y - 87.989971088f;
+        union { float f; unsigned int i; } vx = { x };
+        float y = vx.i;
+        y *= 8.2629582881927490e-8f;
+        return y - 87.989971088f;
 }
 
 /***
