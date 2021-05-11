@@ -10,7 +10,7 @@ make -j5
 
 for version in "tiny_mc" "tiny_mc_ispc" "tiny_mc_m256"
 do
-	sleep 30
+	sleep 10
 	TOTAL_MS=0
 	TOTAL_PH=0
 	for it in $(seq 1 $ITERATIONS)

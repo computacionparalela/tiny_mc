@@ -1,5 +1,6 @@
 # Compilers
-CC = gcc-11
+CC = gcc-10 #clang-11
+CPP = g++-10
 
 #Banderas para vectorizacion:
 ##-fopt-info-vec: para ver si pudo vectorizar.
@@ -9,7 +10,7 @@ CC = gcc-11
 # Flags
 OPT_FLAGS = -Ofast -funroll-loops -march=native #-fopt-info-vec -fopt-info-vec-missed
 CFLAGS = -std=c11 -Wall -Wextra -Wshadow -DRAND7 -DVERBOSE -DSEED=223 $(OPT_FLAGS)
-LDFLAGS = -lm -fopenmp
+LDFLAGS = -lm
 
 # Binary file
 TARGET = tiny_mc
@@ -25,8 +26,8 @@ all: $(TARGET) m256
 $(TARGET): $(C_OBJS)
 	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
 	@./ispc/ispc --opt=fast-math --opt=fast-masked-vload --opt=force-aligned-memory --target-os=linux -O3 --math-lib=fast --addressing=64 --target=avx2-i32x16 --pic ispc/tiny_mc.ispc -o ispc/tiny_mc_ispc.o
-	@g++-11 ispc/tiny_mc_ispc.o ispc/tiny_mc_main.cpp ispc/tiny_mc_ispc.h wtime.c wtime.h params.h $(OPT_FLAGS) -DVERBOSE -o "ispc/$(TARGET)"
-	mv ispc/tiny_mc tiny_mc_ispc
+	$(CPP) ispc/tiny_mc_ispc.o ispc/tiny_mc_main.cpp ispc/tiny_mc_ispc.h wtime.c wtime.h params.h $(OPT_FLAGS) -DVERBOSE -o "ispc/$(TARGET)"
+	@mv ispc/tiny_mc tiny_mc_ispc
 
 m256: $(C_OBJS)
 	clang-11 $(CFLAGS) $(LDFLAGS) $(C_OBJS_256) -DM256
