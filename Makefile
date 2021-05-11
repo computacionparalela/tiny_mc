@@ -1,5 +1,5 @@
 # Compilers
-CC = gcc-10 #clang-11
+CC = clang-11 #gcc-10
 CPP = g++-10
 
 #Banderas para vectorizacion:
@@ -8,7 +8,7 @@ CPP = g++-10
 ##-ftree-vectorize
 
 # Flags
-OPT_FLAGS = -Ofast -funroll-loops -march=native #-fopt-info-vec -fopt-info-vec-missed
+OPT_FLAGS = -Ofast -funroll-loops -march=native #-floop-nest-optimize
 CFLAGS = -std=c11 -Wall -Wextra -Wshadow -DRAND7 -DVERBOSE -DSEED=223 $(OPT_FLAGS)
 LDFLAGS = -lm
 
@@ -30,7 +30,7 @@ $(TARGET): $(C_OBJS)
 	@mv ispc/tiny_mc tiny_mc_ispc
 
 m256: $(C_OBJS)
-	clang-11 $(CFLAGS) $(LDFLAGS) $(C_OBJS_256) -DM256
+	$(CC) $(CFLAGS) $(LDFLAGS) $(C_OBJS_256) -DM256
 	@mv a.out tiny_mc_m256
 
 clean_gcda:
