@@ -8,7 +8,7 @@ CC = gcc-11
 
 # Flags
 OPT_FLAGS = -Ofast -funroll-loops -march=native #-fopt-info-vec -fopt-info-vec-missed
-CFLAGS = -std=c11 -Wall -Wextra -Wshadow -DRAND7 -DVERBOSE $(OPT_FLAGS)
+CFLAGS = -std=c11 -Wall -Wextra -Wshadow -DRAND7 -DVERBOSE -DSEED=223 $(OPT_FLAGS)
 LDFLAGS = -lm -fopenmp
 
 # Binary file

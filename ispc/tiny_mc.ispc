@@ -15,110 +15,6 @@ static inline float rnd(unsigned int &number) {
 	return number / MAXRAND;
 }
 
-static void photonT2(uniform float heat[], uniform float heat2[], uniform unsigned int seed[], uniform int gang_counter)
-{
-	float x = 0.0f;
-	float y = 0.0f;
-	float z = 0.0f;
-	float u = 0.0f;
-	float v = 0.0f;
-	float w = 1.0f;
-	float old_weight;
-	float weight = 1.0f;
-
-	foreach (index = 0 ... gang_counter) {
-	
-		unsigned int rseed = seed[index];
-	
-		do{
-			float t = -log(rnd(rseed));
-			
-			x += t * u;
-			y += t * v;
-			z += t * w;
-
-			float nshell = sqrt(x * x + y * y + z * z) * SHELLS_PER_MFP;
-			unsigned int shell = min((int)nshell, SHELLS - 1);
-			float _heat = (1.0f - ALBEDO) * weight;
-			atomic_add_local(&heat[shell],_heat);
-			atomic_add_local(&heat2[shell],_heat*_heat);
-			weight = weight * ALBEDO;
-			
-			float xi1, xi2, tmp;
-			do {
-				xi1 = 2.0f * rnd(rseed) - 1.0f;
-				xi2 = 2.0f * rnd(rseed) - 1.0f;
-				t = xi1 * xi1 + xi2 * xi2;
-			} while (1.0f < t);
-			u = 2.0f * t - 1.0f;
-			tmp = sqrt((1.0f - u * u) / t);
-			v = xi1 * tmp;
-			w = xi2 * tmp;
-
-			old_weight = weight;
-			if (weight < 0.001f) {
-				weight /= 0.1f;
-			}
-			seed[index] = rseed + 223;
-		} while(!(old_weight < 0.001f && rnd(rseed) > 0.1f));
-	}
-}
-
-static void photonT(uniform float heat[], uniform float heat2[], uniform unsigned int seed[], uniform int gang_counter, uniform int photons)
-{
-	float x = 0.0f;
-	float y = 0.0f;
-	float z = 0.0f;
-	float u = 0.0f;
-	float v = 0.0f;
-	float w = 1.0f;
-	float weight = 1.0f;
-
-	foreach (index = 0 ... gang_counter) {
-	
-		unsigned int rseed = seed[index];
-	
-		do{
-			float t = -log(rnd(rseed));
-			
-			x += t * u;
-			y += t * v;
-			z += t * w;
-
-			float _heat = (1.0f - ALBEDO) * weight;
-			float nshell = sqrt(x * x + y * y + z * z) * SHELLS_PER_MFP;
-			unsigned int shell = min((int)nshell, SHELLS - 1);
-			weight = weight * ALBEDO;
-			
-			atomic_add_local(&heat[shell],_heat);
-			atomic_add_local(&heat2[shell],_heat*_heat);
-			
-			float xi1, xi2, tmp;
-			do {
-				xi1 = 2.0f * rnd(rseed) - 1.0f;
-				xi2 = 2.0f * rnd(rseed) - 1.0f;
-				t = xi1 * xi1 + xi2 * xi2;
-			} while (1.0f < t);
-			u = 2.0f * t - 1.0f;
-			tmp = sqrt((1.0f - u * u) / t);
-			v = xi1 * tmp;
-			w = xi2 * tmp;
-			float old_weight = weight;
-
-			if (weight < 0.001f) {
-				weight /= 0.1f;
-				if (rnd(rseed) > 0.1f){
-					x = y = z = u = v = 0.0f;
-					w = weight = 1.0f;
-					atomic_subtract_local(&photons, 1);
-				}
-			}
-			seed[index] = rseed + 223;
-
-		} while(photons > 0);
-	}
-}
-
 export void photonV(uniform float heat[], uniform float heat2[], uniform unsigned int seed[], uniform int photons)
 {
 	float x = 0.0f;
@@ -129,24 +25,33 @@ export void photonV(uniform float heat[], uniform float heat2[], uniform unsigne
 	float w = 1.0f;
 	float weight = 1.0f;
 
+	//varying float * lheat  = new varying float[SHELLS];
+	//varying float * lheat2 = new varying float[SHELLS];
+
+	//memset(lheat, 0, sizeof(varying float)*SHELLS);
+	//memset(lheat2, 0, sizeof(varying float)*SHELLS);
+
 	unsigned int rseed = seed[programIndex];
 	//Saco los primeros N fotones
 	atomic_subtract_local(&photons, 1);
-	do{
+	cdo{
 		float t = -log(rnd(rseed));
 		x += t * u;
 		y += t * v;
 		z += t * w;
 
 		float _heat = (1.0f - ALBEDO) * weight;
+		float _heat2 = _heat*_heat;
 		float nshell = sqrt(x * x + y * y + z * z) * SHELLS_PER_MFP;
 		unsigned int shell = min((int)nshell, SHELLS - 1);
 		
+		//lheat[shell]  += _heat;
+		//lheat2[shell] += _heat2;
 		atomic_add_local(&heat[shell],_heat);
-		atomic_add_local(&heat2[shell],_heat*_heat);
+		atomic_add_local(&heat2[shell],_heat2);
 		
 		float xi1, xi2, tmp;
-		do {
+		cdo {
 			xi1 = 2.0f * rnd(rseed) - 1.0f;
 			xi2 = 2.0f * rnd(rseed) - 1.0f;
 			t = xi1 * xi1 + xi2 * xi2;
@@ -159,9 +64,10 @@ export void photonV(uniform float heat[], uniform float heat2[], uniform unsigne
 		weight = weight * ALBEDO;
 		if (weight < 0.001f) {
 			weight /= 0.1f;
-			if (rnd(rseed) > 0.1f){
+			cif (rnd(rseed) > 0.1f){
 				//Preparar para uno nuevo?
-				if(atomic_subtract_local(&photons, 1) > 0){
+				int old_photons = atomic_subtract_local(&photons, 1);
+				cif(old_photons > 0){
 					x = y = z = u = v = 0.0f;
 					w = weight = 1.0f;
 				}else{
@@ -170,4 +76,9 @@ export void photonV(uniform float heat[], uniform float heat2[], uniform unsigne
 			}
 		}
 	} while(1);
+	
+	//cfor(int i=0; i<SHELLS; ++i){
+	//	atomic_add_local(&heat[i], lheat[i]);
+	//	atomic_add_local(&heat2[i],lheat2[i]);
+	//}
 }
