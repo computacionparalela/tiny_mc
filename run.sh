@@ -3,12 +3,12 @@
 FILE="report.out"
 TOTAL_MS=0
 TOTAL_PH=0
-ITERATIONS=10
+ITERATIONS=20
 
 make clean
 make -j5
 
-for version in "tiny_mc" "tiny_mc_ispc" "tiny_mc_m256"
+for version in "tiny_mc" "tiny_mc_ispc" "tiny_mc_m128" "tiny_mc_m256"
 do
 	sleep 10
 	TOTAL_MS=0
