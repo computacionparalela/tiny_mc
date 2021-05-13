@@ -3,20 +3,24 @@
 FILE="report.out"
 TOTAL_MS=0
 TOTAL_PH=0
-ITERATIONS=20
+ITERATIONS=1
 
-make clean
-make -j5
+#90 ejecuciones
 
-for version in "tiny_mc" "tiny_mc_ispc" "tiny_mc_m128" "tiny_mc_m256"
+echo "Ejecutando run_target.sh"
+
+for target in "sse4-i8x16" "sse4-i16x8" "sse4-i32x4" "sse4-i32x8" "avx2-i8x32" "avx2-i16x16" "avx2-i32x4" "avx2-i32x8" "avx2-i32x16"
 do
-	sleep 10
+	make clean
+	make ADD_FLAGS=-DPHOTONS=1048576 ISPC_TARGET=$target
+
+	sleep 1
 	TOTAL_MS=0
 	TOTAL_PH=0
 	for it in $(seq 1 $ITERATIONS)
 	do
-		./$version > /dev/null
-		./$version > "$it-$FILE"
+		./tiny_mc_ispc > /dev/null
+		./tiny_mc_ispc > "$it-$FILE"
 		LOCAL_MS=$(grep '+>> ' "$it-$FILE" | awk -F ' ' '{print $2}')
 		TOTAL_MS=$(echo $TOTAL_MS $LOCAL_MS | awk '{printf "%5.3f\n",$1+$2}')
 		LOCAL_PH=$(grep '+>>> ' "$it-$FILE" | awk -F ' ' '{print $2}')
@@ -27,8 +31,8 @@ do
 
 	TOTAL_MS=$(echo $TOTAL_MS $ITERATIONS | awk '{printf "%5.3f\n",$1/$2}')
 	TOTAL_PH=$(echo $TOTAL_PH $ITERATIONS | awk '{printf "%5.3f\n",$1/$2}')
-	echo "$version:"	
+	echo "tiny_mc_ispc $target:"	
 	echo "    >>  TOTAL_MS: $TOTAL_MS"
 	echo "    >>> TOTAL_PH: $TOTAL_PH"
+	make clean
 done
-make clean

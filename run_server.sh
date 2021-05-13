@@ -7,6 +7,8 @@
 
 ### Enviroment setup
 . /etc/profile
+source /opt/intel/oneapi/compiler/latest/env/vars.sh
 
-
-srun ./run.sh
+srun ./run_compiler.sh
+srun ./run_fotones.sh
+srun ./run_target.sh
