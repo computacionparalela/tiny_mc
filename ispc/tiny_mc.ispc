@@ -25,12 +25,6 @@ export void photonV(uniform float heat[], uniform float heat2[], uniform unsigne
 	float w = 1.0f;
 	float weight = 1.0f;
 
-	//varying float * lheat  = new varying float[SHELLS];
-	//varying float * lheat2 = new varying float[SHELLS];
-
-	//memset(lheat, 0, sizeof(varying float)*SHELLS);
-	//memset(lheat2, 0, sizeof(varying float)*SHELLS);
-
 	unsigned int rseed = seed[programIndex];
 	//Saco los primeros N fotones
 	atomic_subtract_local(&photons, 1);
@@ -45,8 +39,6 @@ export void photonV(uniform float heat[], uniform float heat2[], uniform unsigne
 		float nshell = sqrt(x * x + y * y + z * z) * SHELLS_PER_MFP;
 		unsigned int shell = min((int)nshell, SHELLS - 1);
 		
-		//lheat[shell]  += _heat;
-		//lheat2[shell] += _heat2;
 		atomic_add_local(&heat[shell],_heat);
 		atomic_add_local(&heat2[shell],_heat2);
 		
@@ -76,9 +68,4 @@ export void photonV(uniform float heat[], uniform float heat2[], uniform unsigne
 			}
 		}
 	} while(1);
-	
-	//cfor(int i=0; i<SHELLS; ++i){
-	//	atomic_add_local(&heat[i], lheat[i]);
-	//	atomic_add_local(&heat2[i],lheat2[i]);
-	//}
 }

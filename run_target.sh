@@ -3,7 +3,7 @@
 FILE="report.out"
 TOTAL_MS=0
 TOTAL_PH=0
-ITERATIONS=1
+ITERATIONS=10
 
 #90 ejecuciones
 
@@ -14,11 +14,11 @@ do
 	make clean
 	make ADD_FLAGS=-DPHOTONS=1048576 ISPC_TARGET=$target
 
-	sleep 1
 	TOTAL_MS=0
 	TOTAL_PH=0
 	for it in $(seq 1 $ITERATIONS)
 	do
+		sleep 3
 		./tiny_mc_ispc > /dev/null
 		./tiny_mc_ispc > "$it-$FILE"
 		LOCAL_MS=$(grep '+>> ' "$it-$FILE" | awk -F ' ' '{print $2}')

@@ -201,7 +201,7 @@ int main(void)
         // configure RNG
         srand(SEED);
         for(int i=0; i<32; i++) seed[i] = rand();
-
+	photon(256, seed);
         // first run
         memset(heat,0,sizeof(float)*SHELLS);
         memset(heat2,0,sizeof(float)*SHELLS);

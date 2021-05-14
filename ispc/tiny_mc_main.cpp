@@ -54,6 +54,7 @@ int main() {
 
 	srand(SEED);
 	for(int i=0;i<64;i++)seed[i] = rand();
+	photonV(heat, heat2, seed, 256);
 	memset(heat,0,sizeof(float)*SHELLS);
 	memset(heat2,0,sizeof(float)*SHELLS);
 

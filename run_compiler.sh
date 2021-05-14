@@ -16,11 +16,11 @@ do
 
 	for version in "tiny_mc" "tiny_mc_ispc" "tiny_mc_m128" "tiny_mc_m256"
 	do
-		sleep 1
 		TOTAL_MS=0
 		TOTAL_PH=0
 		for it in $(seq 1 $ITERATIONS)
 		do
+			sleep 3
 			./$version > /dev/null
 			./$version > "$it-$FILE"
 			LOCAL_MS=$(grep '+>> ' "$it-$FILE" | awk -F ' ' '{print $2}')

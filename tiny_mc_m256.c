@@ -111,7 +111,7 @@ static void photon(int photons, float * _seed)
                 /* Step 3: Absorption and scattering */
                 //unsigned int shell = min(sqrtf(x * x + y * y + z * z) * shell_per_mfp, SHELLS - 1); /* absorb */
                 __m256 sroot = _mm256_sqrt_ps(_mm256_add_ps(_mm256_mul_ps(x, x), _mm256_add_ps(_mm256_mul_ps(y, y), _mm256_mul_ps(z, z))));
-                __m256 shell = _mm256_add_ps(_mm256_min_ps(_mm256_floor_ps(_mm256_mul_ps(sroot, shells_per_mfp)), _mm256_sub_ps(_mm256_set1_ps(SHELLS), _mm256_set1_ps(1.0f))), _mm256_set1_ps(0.1f));
+                __m256 shell = _mm256_min_ps(_mm256_floor_ps(_mm256_mul_ps(sroot, shells_per_mfp)), _mm256_sub_ps(_mm256_set1_ps(SHELLS), _mm256_set1_ps(1.0f)));
 
                 //float _heat = (1.0f - albedo) * weight;
                 __m256 _heat = _mm256_mul_ps(_mm256_sub_ps(_mm256_set1_ps(1.0f),albedo), weight);
@@ -201,7 +201,7 @@ int main(void)
         // configure RNG
         srand(SEED);
         for(int i=0; i<32; i++) seed[i] = rand();
-
+	photon(256, seed);
         // first run
         memset(heat,0,sizeof(float)*SHELLS);
         memset(heat2,0,sizeof(float)*SHELLS);
