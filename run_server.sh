@@ -1,6 +1,6 @@
 #!/bin/bash
 
-#SBATCH --job-name=cremona-tinymc
+#SBATCH --job-name=bbaruffaldi-tinymc
 #SBATCH --nodes=1
 #SBATCH --ntasks-per-node=1
 #SBATCH --cpus-per-task=28

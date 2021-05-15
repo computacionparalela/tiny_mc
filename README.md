@@ -6,159 +6,137 @@ El código realiza simulaciones de propagación de luz, a partir de una fuente p
 - [Página en Wikipedia sobre el problema](https://en.wikipedia.org/wiki/Monte_Carlo_method_for_photon_transport)
 - [Código original](https://omlc.org/software/mc/) de [Scott Prahl](https://omlc.org/~prahl/)
 
+# Laboratorio 2: Vectorización
 
-## Características de la PC
+En este segundo laboratorio nos enfocamos en la vectorización del código correspondiente al problema tiny_mc utilizando las herramientas ispc e intrinsics.
 
-Las ejecuciones se realizaron sobre una notebook Asus vivobook S14 con las siguiente prestaciones:
+Las ejecuciones se realizaron sobre el servidor Jupiterace y sobre una notebook Asus vivobook S14(utilizada para la entrega del primer laboratorio).
 
+Como métrica decidimos utilizar la cantidad de fotones procesados por segundo, que fue la utilizada durante la primera entrega.
 
-```
+## Modificaciones
 
-	Ubuntu 18.04.5 LTS
-
-	Kernel 5.4.0-72-generic
-
-	Intel(R) Core(TM) i7-8550U CPU @ 1.80GHz x 8
-
-	16 GB de RAM DDR4 2400 MT/s 64 bits band-width
-
-	Compiladores: GCC 10.1.0 | CLANG 11.1.0 | ICC 2021.2.0
-
-```
-
-Sobre este equipo se ejecutó el programa Empirical Roofline Toolkit obteniendo los siguientes resultados:
-
-![Empirical Roofline Toolkit](https://raw.githubusercontent.com/barufa/tiny_mc/main/Imagenes/image9.jpg "Grafico ERT con varios hilo")
-
-Y al ejecutarlo para un solo hilo nos queda:
-
-![Empirical Roofline Toolkit](https://raw.githubusercontent.com/barufa/tiny_mc/main/Imagenes/image7.jpg "Grafico ERT con un solo hilo")
+Se han realizado dos modificaciones relevantes al código de la primer entrega:
+* Decidimos utilizar el generador de números aleatorios xoshiro, ya que nos permite mantener un rendimiento similar al obtenido mediante el generador
+  Lehmery posee un código que encontramos más simple para vectorizar mediante intrinsics.
+* Utilizamos una aproximación de la función log para mejorar la performance general del programa.
 
 
-## Métrica utilizada
+## Vectorización mediante el compilador
 
-Como métrica del problema se decidió utilizar la cantidad de fotones procesados por segundo, mayoritariamente representada de a miles. Esto se debe a que, en nuestra opinión, es una magnitud más fácil de comprender y visualizar.Siempre que se habla de mejoras en el programa, se estará buscando un incremento en la métrica elegida.
+Una primera aproximación al problema fue tratar de realizar modificaciones al código para ayudar a que el compilador lo vectoricé. Sin embargo, debido a 
+la naturaleza del algoritmo esta tarea nos pareció compleja por lo que decidimos pasar directamente a la primera herramienta(ispc). 
 
-
-## Optimizaciones realizadas sobre el código
-
-Luego de una primera evaluación del programa se decidió realizar pruebas sobre el
-generador de números aleatorios, notando que la misma ocupaba gran parte del tiempo de
-ejecución.
-
-A partir de esto se procedió a evaluar una amplia cantidad de generadores de números
-aleatorios y luego de diversas evaluaciones se concluyo que lo mas optimo era utilizar el
-método de Lehmer. Dicho método fue elegido ya que no solo presenta uno de los dos
-mejores rendimientos sino que también proviene de una fuente más confiable (Lehmer fue
-quien introdujo los generadores congruenciales lineales que se usan hoy en día).
-
-Tras realizar dichos cambios se observó un incremento del 50% en la cantidad de fotones
-procesados por segundo, junto con una disminución al 30% en los tiempos de ejecución en
-la porción de código correspondiente al mismo.
-
-Por último se buscó optimizar el cálculo de la nueva dirección del fotón, cambiando el
-método de rechazo por coordenadas polares. Sin embargo, este cambio requería utilizar
-funciones matemáticas que ralentizaban el código produciendo una reducción en la cantidad
-de fotones. Por ende no se siguió explorando esta posible optimización del código.
+Algunas banderas que encontramos útiles durante esta etapa son `-fopt-info-vec` y `-fopt-info-vec-missed` para obtener mayor información acerca de los 
+problemas que tenía el compilador para vectorizar nuestro código.
 
 
-## Metodología de elección de banderas
+## ISPC
 
-Para explorar el espacio de banderas de optimizaciones decidimos utilizar un método
-Wrapper de selección de variables, el cual es usado en machine learning y fue adaptado a
-este problema.
+La primera herramienta utilizada fue ispc. Fue relativamente simple reescribir la función `photon` aprovechando el modelo de paralelización presentado por 
+este compilador. 
 
-En machine learning el método wrapper evalúa subconjuntos de variables para determinar
-una combinación adecuada para el problema que se quiere resolver.
+Esta herramienta nos presenta un modelo de paralelismo compuesto por lanes o “carriles”. Dentro de estos carriles podemos ejecutar distintas instancias de nuestra 
+función photon al mismo tiempo, lo que nos permite simular varios fotones a la vez. La idea principal fue mantener todos estos carriles ocupados durante la mayor 
+cantidad de tiempo posible. Para ello, cambiamos a la firma de la función photon para que tome una variable que indique la cantidad de fotones a simular. Al 
+comenzar con la con la ejecución de la función cargamos a todos los carriles con la simulación de un fotón y, cuando alguna de las simulaciones termina simplemente 
+iniciamos una nueva simulación dentro de ese carril. De esta forma, maximizamos el uso de los vectores para mejorar la eficiencia del programa.
 
-![Metodo de seleccion de variables Wrapper](https://raw.githubusercontent.com/barufa/tiny_mc/main/Imagenes/image3.png "Wrapper")
+Fue necesario la utilización de la función `atomic_add_local` de la librería estándar de ispc para evitar data races dentro del código.
 
-Dentro de nuestro problema, las variables son representadas por las distintas banderas del
-compilador y el rendimiento está dado por el archivo binario. Para facilitar la comprensión
-del mismo se proporciona el siguiente ejemplo:
+## Intrinsics
 
-![Espacio de busqueda](https://raw.githubusercontent.com/barufa/tiny_mc/main/Imagenes/image1.png "Espacio de busqueda")
+En el caso de intrinsics la adaptación de la función photon fue más compleja. De forma similar a ispc, se trató de mantener a todos los carriles ocupados durante 
+la mayor cantidad de tiempo posible siguiendo un esquema de ejecución similar, en el cual si una simulación termina se vuelva a iniciar la próxima dentro del mismo 
+carril para evitar que este se desaproveche.
 
-En este caso se trabaja con un espacio de 4 banderas de compilación. El punto inicial es un
-estado que cuenta con todas las banderas habilitadas y en cada paso se trata de quitar una
-ellas, probando exhaustivamente cuál es el estado de mejor rendimiento. Este proceso se
-repite hasta llegar al estado vacío.
+En este caso la escritura sobre los arreglos heat y heat2 se realizó de forma secuencial, copiando el valor de los vectores a dos arreglos de punto flotante. De esta 
+forma, se eliminó la posibilidad de data races dentro del código.
 
-Concretamente, en este gráfico se parte de un estado inicial con las banderas {A,B,C,D},
-avanzando al estado {A,C,D}, luego al {A,C}, posteriormente {A} y finalmente se llega al
-estado vacío. Cabe aclarar que no es posible ir del estado {A,C,D} al {B,D} o {B,C,D} puesto
-que la bandera B ya ha sido descartada.
+## Benchmark
 
-Si se quisiera explorar todo el espacio de banderas y sus posibles combinaciones sería
-necesario realizar 2^n compilaciones, puesto que este problema crece exponencialmente a
-medida aumenta el número de banderas. Por otro lado, el orden del método de selección
-elegido es cuadrático respecto a la cantidad de banderas presentes, reduciendo
-ampliamente los tiempos pertinentes a la exploración.
+Una de las primeras mediciones que realizamos fue modificar el tamaño del problema, para ver como la cantidad de fotones afecta a la eficiencia general del programa.
 
+![Comparacion de cantidad de fotones en maquina local](https://raw.githubusercontent.com/barufa/tiny_mc/lab2/data/local_cantidad_fotones.png "Cantidad de fotones")
 
-## Resultados en los distintos compiladores y cual es mejor
+| Cantidad de fotones | Original    | ISPC     | Intrinsics 128 | Intrinsics 256 |
+| ------------------- |:-----------:| --------:| --------------:| --------------:|
+| 16384               | 815,742     | 1065,263 | 1199,765       | 1463,758       |
+| 32768               | 979,514     | 1328,133 | 1416,63        | 1600,647       |
+| 65536               | 1026,407    | 1540,078 | 1584,695       | 1942,96        |
+| 131072              | 1032,93     | 1587,244 | 1628,891       | 2005,029       |
+| 262144              | 1035,281    | 1631,488 | 1630,939       | 2022,555       |
+| 524288              | 1041,045    | 1648,66  | 1639,804       | 2036,699       |
+| 1048576             | 1061,585    | 1642,284 | 1634,971       | 2033,041       |
+| 2097152             | 852,189     | 1343,108 | 1459,442       | 1957,137       |
 
-En el siguiente gráfico podemos ver los resultados obtenidos para las distintas
-combinaciones de banderas de optimización a través del método presentado.
+![Comparacion de cantidad de fotones en Jupiterace](https://raw.githubusercontent.com/barufa/tiny_mc/lab2/data/server_cantidad_fotones.png "Cantidad de fotones")
 
-![Comparacion de compiladores](https://raw.githubusercontent.com/barufa/tiny_mc/main/Imagenes/image6.png "Compiladores")
+| Cantidad de fotones | Original    | ISPC     | Intrinsics 128 | Intrinsics 256 |
+| ------------------- |:-----------:| --------:| --------------:| --------------:|
+| 16384               | 815,742     | 1065,263 | 1199,765       | 1463,758       |
+| 32768               | 979,514     | 1328,133 | 1416,63        | 1600,647       |
+| 65536               | 1026,407    | 1540,078 | 1584,695       | 1942,96        |
+| 131072              | 1032,93     | 1587,244 | 1628,891       | 2005,029       |
+| 262144              | 1035,281    | 1631,488 | 1630,939       | 2022,555       |
+| 524288              | 1041,045    | 1648,66  | 1639,804       | 2036,699       |
+| 1048576             | 1061,585    | 1642,284 | 1634,971       | 2033,041       |
+| 2097152             | 852,189     | 1343,108 | 1459,442       | 1957,137       |
 
-| Compilador | NONE    | O0+     | O1+     | O2+     | O3+     | Ofast+  |
-| ---------- |:-------:| -------:| -------:| -------:| -------:| -------:|
-| GCC        | 299.525 | 312.613 | 541.420 | 783.162 | 805.886 | 812.322 |
-| CLANG      | 262.130 | 265.107 | 368.600 | 798.277 | 810.487 | -       |
-| ICC        | 492.891 | 200.372 | 632.288 | 494.507 | 497.35  | -       |
+Podemos ver que la cantidad de fotones procesados tiene una cierta influencia en la eficiencia del programa, llegando a un valor máximo cuando se superan los 
+cien mil fotones. Dado que este fenómeno afecta a todas las versiones de la misma manera, de ahora en adelante utilizaremos el valor 131072 como la cantidad de fotones 
+a procesar.
 
-Las banderas obtenidas en cada caso fueron:
+En la siguiente gráfica hacemos una comparación de las distintas versiones del programa `tiny_mc`. Además, para cada versión mostramos resultados utilizando distintos 
+compiladores para determinar si hay alguna diferencia real en el ejecutable generado.
 
-1. GCC:
-* O0+: -ffast-math -funroll-loops -fpeel-loops -march=native
-* O1+: -ffast-math -funroll-loops -fprefetch-loop-arrays -fpeel-loops -march=native
-* O2+: -funroll-loops  -ffast-math -fprefetch-loop-arrays -fpeel-loops -flto -march=native
-* O3+: -ffast-math -flto -funroll-loops -fpeel-loops -march=native
-* Ofast+: -funroll-all-loops -flto -march=native
+![Comparacion de las distintas versiones en maquina local](https://raw.githubusercontent.com/barufa/tiny_mc/lab2/data/local_compiladores.png "Comparacion de las distintas versiones")
 
-2. CLANG:
-* O0+: -funroll-loops -flto -ffast-math -march=native
-* O1+: -funroll-loops -flto -funsafe-math-optimizations -ffinite-math-only -freciprocal-math -fno-math-errno -march=native
-* O2+:  -ffast-math -funroll-loops -flto - march=native
-* O3+: -funroll-loops -flto -ffast-math -march=native
+| Compiladores | Original    | ISPC     | Intrinsics 128 | Intrinsics 256 |
+| ------------ |:-----------:| --------:| --------------:| --------------:|
+| GCC          | 1132,407    | 1599,902 | 1629,829       | 2049,539       |
+| CLANG        | 1083,929    | 1597,140 | 1739,319       | 2153,411       |
+| ICC          | 708,901     | 1612,188 | 1486,677       | 1773,948       |
 
-3. ICC:
-* O0+: -qopenmp-offload -march=native -fast-transcendentals -parallel -fimf-precision=simple -qopt-prefetch -no-prec-div -no-prec-sqrt -qopenmp -fp-speculation
-* O1+: -qopenmp-offload -march=native -fast-transcendentals -parallel -fimf-precision=simple -qopt-prefetch -no-prec-div -no-prec-sqrt -qopenmp
-* O2+: -qopenmp-offload -march=native -fast-transcendentals
-* O3+: -qopenmp-offload -march=native -parallel -fimf-precision=simple -qopt-prefetch -no-prec-div -no-prec-sqrt -fp-speculation
+![Comparacion de las distintas versiones en maquina Jupiterace](https://raw.githubusercontent.com/barufa/tiny_mc/lab2/data/server_compiladores.png "Comparacion de las distintas versiones")
 
-En todos los casos, None hace referencia a la compilación sin el agregado de ninguna bandera.
+| Compiladores | Original    | ISPC     | Intrinsics 128 | Intrinsics 256 |
+| ------------ |:-----------:| --------:| --------------:| --------------:|
+| GCC          | 1132,407    | 1599,902 | 1629,829       | 2049,539       |
+| CLANG        | 1083,929    | 1597,140 | 1739,319       | 2153,411       |
+| ICC          | 708,901     | 1612,188 | 1486,677       | 1773,948       |
 
-Podemos ver claramente que los mejores resultados fueron obtenidos con GCC y Clang, alcanzando los 800.000 fotones por segundo procesados, mientras que el compilador de Intel (ICC) solamente logra unos 630.000.
+Como última comparación decidimos realizar mediciones de la versión adaptada a ispc con distintos targets. Decidimos comparar vectores de sse4 y avx2 con sus distintas
+configuraciones. Esto se consigue simplemente modificando el valor de la opción `--target=` del compilador ispc.
 
-También se puede apreciar que al utilizar el compilador ICC con la bandera -O0 se produce una drástica reducción en el rendimiento, debido a que este compilador tiene habilitada la bandera -O2 por defecto. 
+![Comparacion de distintos targets en ispc en maquina local](https://raw.githubusercontent.com/barufa/tiny_mc/lab2/data/local_target.png "Comparacion de distintos targets en ispc")
 
-Por último, es posible notar que el mejor rendimiento usando ICC se alcanzó con la bandera -O1. Este resultado genera desconcierto y todavía no se ha conseguido esclarecer la causa del mismo. Una hipótesis vigente es la falta de conocimientos pertinentes a la hora de realizar las pruebas en dicho procesador. La otra es que la bandera -O2 de este compilador pone en funcionamiento ciertas optimizaciones que, quizás, en el procesador de trabajo actual  producen una caída en el rendimiento.
+| Target      | KPPS     |
+| ----------- |:--------:|
+| sse4-i16x8  | 1017,83  |
+| sse4-i32x4  | 858,035  |
+| sse4-i32x8  | 1045,75  |
+| avx2-i16x16 | 1536,187 |
+| avx2-i32x4  | 1222,55  |
+| avx2-i32x8  | 1443,946 |
+| avx2-i32x16 | 1674,938 |
 
+![Comparacion de distintos targets en ispc en maquina Jupiterace](https://raw.githubusercontent.com/barufa/tiny_mc/lab2/data/server_target.png "Comparacion de distintos targets en ispc")
 
-## Relación lineal entre fotones y tiempo
+| Target      | KPPS     |
+| ----------- |:--------:|
+| sse4-i16x8  | 1017,83  |
+| sse4-i32x4  | 858,035  |
+| sse4-i32x8  | 1045,75  |
+| avx2-i16x16 | 1536,187 |
+| avx2-i32x4  | 1222,55  |
+| avx2-i32x8  | 1443,946 |
+| avx2-i32x16 | 1674,938 |
 
-![Grafico tiempo y cantidad de fotones](https://raw.githubusercontent.com/barufa/tiny_mc/main/Imagenes/image5.png "Grafico tiempo y cantidad de fotones")
-
-En este gráfico se puede ver que el orden del problema es lineal respecto al número de fotones. Esto es así ya que la memoria requerida por el programa permanece constante a lo largo del mismo y al aumentar la cantidad de fotones solo incrementa el procesamiento.
-
-
-## Resultados de Perf
-
-Se ejecutó con la versión original y la versión optimizada del programa con Perf para realizar una comparación entre ellas.
-
-![Imagen Perf Original](https://raw.githubusercontent.com/barufa/tiny_mc/main/Imagenes/image4.png "Imagen Perf Original")
-
-![Imagen Perf Optimizado](https://raw.githubusercontent.com/barufa/tiny_mc/main/Imagenes/image2.png "Imagen Perf Optimizado")
-
-Podemos ver que la mayor diferencia entre las ejecuciones radica en la cantidad de instrucciones ejecutadas, la cual se reduce un 71,66%. Esta reducción se traduce en un decremento en los tiempos de ejecución en un 72,94% y un incremento cercano al 305,13% en el número de fotones procesados por segundo.
-
+Se observa que los mejores resultados se obtuvieron con `avx2`, y en particular con los valores `avx2-i32x16` y `avx2-i16x16`.
 
 ## Conclusiones
 
-* De los experimentos realizados podemos concluir que los mejores resultados se obtuvieron con los compiladores GCC y CLANG.
-* Una posible mejora al método de exploración sería utilizar evaluaciones estadísticas, como la prueba t de Student, para determinar a qué estado es óptimo avanzar, en lugar de simplemente realizar comparaciones entre los promedios de ejecución.
-* Se probaron las optimizaciones guiadas por ejecución en GCC (-fprofile-generate y -fprofile-use), pero solo se encontraron mejoras en la cantidad de fotones procesada cercanas al 1%.
+* ISPC es una herramienta que nos permite vectorizar código de una manera simple y rápida, aunque no suele brindar los mejores resultados.
+* Intrinsics alcanzó los mejores rendimientos, pero adaptar algoritmos a esta herramienta puede ser complejo requerir de mucho trabajo.
+* No se vio una diferencia muy marcada entre GCC y CLANG, ya que ambos compiladores brindaron resultados similares para todas las versiones.
