@@ -74,14 +74,14 @@ Una de las primeras mediciones que realizamos fue modificar el tamaño del probl
 
 | Cantidad de fotones | Original    | ISPC     | Intrinsics 128 | Intrinsics 256 |
 | ------------------- |:-----------:| --------:| --------------:| --------------:|
-| 16384               | 815,742     | 1065,263 | 1199,765       | 1463,758       |
-| 32768               | 979,514     | 1328,133 | 1416,63        | 1600,647       |
-| 65536               | 1026,407    | 1540,078 | 1584,695       | 1942,96        |
-| 131072              | 1032,93     | 1587,244 | 1628,891       | 2005,029       |
-| 262144              | 1035,281    | 1631,488 | 1630,939       | 2022,555       |
-| 524288              | 1041,045    | 1648,66  | 1639,804       | 2036,699       |
-| 1048576             | 1061,585    | 1642,284 | 1634,971       | 2033,041       |
-| 2097152             | 852,189     | 1343,108 | 1459,442       | 1957,137       |
+| 16384               | 605,528     | 782,766  | 825,963        | 1207,429       |
+| 32768               | 611,367     | 847,596  | 880,697        | 1205,894       |
+| 65536               | 641,139     | 901,991  | 851,948        | 1361,314       |
+| 131072              | 730,764     | 1015,439 | 926,863        | 1353,790       |
+| 262144              | 800,319     | 1168,219 | 1043,524       | 1539,867       |
+| 524288              | 823,566     | 1243,558 | 1113,042       | 1638,288       |
+| 1048576             | 837,790     | 1279,144 | 1147,236       | 1655,496       |
+| 2097152             | 846,529     | 1284,745 | 1156,730       | 1714,668       |
 
 Podemos ver que la cantidad de fotones procesados tiene una cierta influencia en la eficiencia del programa, llegando a un valor máximo cuando se superan los 
 cien mil fotones. Dado que este fenómeno afecta a todas las versiones de la misma manera, de ahora en adelante utilizaremos el valor 131072 como la cantidad de fotones 
@@ -102,9 +102,9 @@ compiladores para determinar si hay alguna diferencia real en el ejecutable gene
 
 | Compiladores | Original    | ISPC     | Intrinsics 128 | Intrinsics 256 |
 | ------------ |:-----------:| --------:| --------------:| --------------:|
-| GCC          | 1132,407    | 1599,902 | 1629,829       | 2049,539       |
-| CLANG        | 1083,929    | 1597,140 | 1739,319       | 2153,411       |
-| ICC          | 708,901     | 1612,188 | 1486,677       | 1773,948       |
+| GCC          | 751,016     | 1020,218 | 974,951        | 1294,357       |
+| CLANG        | 716,246     | 978,152  | 923,689        | 1272,414       |
+| ICC          | 524,083     | 1005,528 | 915,663        | 1058,426       |
 
 Como última comparación decidimos realizar mediciones de la versión adaptada a ispc con distintos targets. Decidimos comparar vectores de sse4 y avx2 con sus distintas
 configuraciones. Esto se consigue simplemente modificando el valor de la opción `--target=` del compilador ispc.
@@ -125,13 +125,13 @@ configuraciones. Esto se consigue simplemente modificando el valor de la opción
 
 | Target      | KPPS     |
 | ----------- |:--------:|
-| sse4-i16x8  | 1017,83  |
-| sse4-i32x4  | 858,035  |
-| sse4-i32x8  | 1045,75  |
-| avx2-i16x16 | 1536,187 |
-| avx2-i32x4  | 1222,55  |
-| avx2-i32x8  | 1443,946 |
-| avx2-i32x16 | 1674,938 |
+| sse4-i16x8  | 903,312  |
+| sse4-i32x4  | 726,404  |
+| sse4-i32x8  | 939,453  |
+| avx2-i16x16 | 1133,242 |
+| avx2-i32x4  | 862,087  |
+| avx2-i32x8  | 1171,010 |
+| avx2-i32x16 | 1277,371 |
 
 Se observa que los mejores resultados se obtuvieron con `avx2`, y en particular con los valores `avx2-i32x16` y `avx2-i16x16`.
 
