@@ -82,6 +82,8 @@ Una de las primeras mediciones que realizamos fue modificar el tamaño del probl
 | 524288              | 823,566     | 1243,558 | 1113,042       | 1638,288       |
 | 1048576             | 837,790     | 1279,144 | 1147,236       | 1655,496       |
 | 2097152             | 846,529     | 1284,745 | 1156,730       | 1714,668       |
+| 4194304             | 853,212     | 1299,156 | 1169,585       | 1706,935       |
+| 8388608             | 853,789     | 1309,938 | 1177,384       | 1743,716       |
 
 Podemos ver que la cantidad de fotones procesados tiene una cierta influencia en la eficiencia del programa, llegando a un valor máximo cuando se superan los 
 cien mil fotones. Dado que este fenómeno afecta a todas las versiones de la misma manera, de ahora en adelante utilizaremos el valor 131072 como la cantidad de fotones 
