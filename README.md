@@ -42,13 +42,17 @@ cantidad de tiempo posible. Para ello, cambiamos a la firma de la función photo
 comenzar con la con la ejecución de la función cargamos a todos los carriles con la simulación de un fotón y, cuando alguna de las simulaciones termina simplemente 
 iniciamos una nueva simulación dentro de ese carril. De esta forma, maximizamos el uso de los vectores para mejorar la eficiencia del programa.
 
+![Funcion atomic_add_local en ispc](https://raw.githubusercontent.com/barufa/tiny_mc/lab2/data/atomic_add.png "Atomic Add")
+
 Fue necesario la utilización de la función `atomic_add_local` de la librería estándar de ispc para evitar data races dentro del código.
 
 ## Intrinsics
 
-En el caso de intrinsics la adaptación de la función photon fue más compleja. De forma similar a ispc, se trató de mantener a todos los carriles ocupados durante 
-la mayor cantidad de tiempo posible siguiendo un esquema de ejecución similar, en el cual si una simulación termina se vuelva a iniciar la próxima dentro del mismo 
+En el caso de intrinsics la adaptación de la función photon fue más compleja ya que la utilizacion de esta herramienta es muy similar a la traduccion a assembler. De forma similar a ispc, se trató de mantener a todos los carriles ocupados durante la mayor cantidad de tiempo posible siguiendo un esquema de ejecución similar,
+en el cual si una simulación termina se vuelva a iniciar la próxima dentro del mismo 
 carril para evitar que este se desaproveche.
+
+![Actualizacion secuencial en m256](https://raw.githubusercontent.com/barufa/tiny_mc/lab2/data/m256_store.png "Actualizacion secuencial de heat")
 
 En este caso la escritura sobre los arreglos heat y heat2 se realizó de forma secuencial, copiando el valor de los vectores a dos arreglos de punto flotante. De esta 
 forma, se eliminó la posibilidad de data races dentro del código.
@@ -70,6 +74,10 @@ Una de las primeras mediciones que realizamos fue modificar el tamaño del probl
 | 1048576             | 1061,585    | 1642,284 | 1634,971       | 2033,041       |
 | 2097152             | 852,189     | 1343,108 | 1459,442       | 1957,137       |
 
+Podemos ver que la cantidad de fotones procesados tiene una cierta influencia en la eficiencia del programa, llegando a un valor máximo cuando se superan los 
+cien mil fotones. Dado que este fenómeno afecta a todas las versiones de la misma manera, de ahora en adelante utilizaremos el valor 131072 como la cantidad de fotones 
+a procesar.
+
 ![Comparacion de cantidad de fotones en Jupiterace](https://raw.githubusercontent.com/barufa/tiny_mc/lab2/data/server_cantidad_fotones.png "Cantidad de fotones")
 
 | Cantidad de fotones | Original    | ISPC     | Intrinsics 128 | Intrinsics 256 |
@@ -85,9 +93,7 @@ Una de las primeras mediciones que realizamos fue modificar el tamaño del probl
 | 4194304             | 853,212     | 1299,156 | 1169,585       | 1706,935       |
 | 8388608             | 853,789     | 1309,938 | 1177,384       | 1743,716       |
 
-Podemos ver que la cantidad de fotones procesados tiene una cierta influencia en la eficiencia del programa, llegando a un valor máximo cuando se superan los 
-cien mil fotones. Dado que este fenómeno afecta a todas las versiones de la misma manera, de ahora en adelante utilizaremos el valor 131072 como la cantidad de fotones 
-a procesar.
+En las ejecuciones dentro del servidor ocurre un fenómeno similar, pero el incremento de la performance empieza a desaparecer a partir de los 2 millones de fotones.
 
 En la siguiente gráfica hacemos una comparación de las distintas versiones del programa `tiny_mc`. Además, para cada versión mostramos resultados utilizando distintos 
 compiladores para determinar si hay alguna diferencia real en el ejecutable generado.
@@ -123,6 +129,8 @@ configuraciones. Esto se consigue simplemente modificando el valor de la opción
 | avx2-i32x8  | 1443,946 |
 | avx2-i32x16 | 1674,938 |
 
+En nuestra computadora local el mejor rendimiento se obtuvo con avx2-i32x16, alcanzó un valor de 1.600.000 fotones procesados por segundo.
+
 ![Comparacion de distintos targets en ispc en maquina Jupiterace](https://raw.githubusercontent.com/barufa/tiny_mc/lab2/data/server_target.png "Comparacion de distintos targets en ispc")
 
 | Target      | KPPS     |
@@ -135,10 +143,13 @@ configuraciones. Esto se consigue simplemente modificando el valor de la opción
 | avx2-i32x8  | 1171,010 |
 | avx2-i32x16 | 1277,371 |
 
-Se observa que los mejores resultados se obtuvieron con `avx2`, y en particular con los valores `avx2-i32x16` y `avx2-i16x16`.
+Dentro del servidor Jupiterace se observa que los mejores resultados se obtuvieron con `avx2`, y en particular con el valor `avx2-i32x16`.
 
 ## Conclusiones
 
 * ISPC es una herramienta que nos permite vectorizar código de una manera simple y rápida, aunque no suele brindar los mejores resultados.
 * Intrinsics alcanzó los mejores rendimientos, pero adaptar algoritmos a esta herramienta puede ser complejo requerir de mucho trabajo.
 * No se vio una diferencia muy marcada entre GCC y CLANG, ya que ambos compiladores brindaron resultados similares para todas las versiones.
+* En nuestra máquina local se duplicó la cantidad de fotones procesados por segundo, pasando de 1.061.585 fps a 2.033.041 fps.
+* En el servidor Jupiterace se alcanzó una mejora de 105%, pasando de 853.789 fps a 1.743.716 fps.
+
