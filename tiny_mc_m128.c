@@ -88,7 +88,7 @@ static void photon(int photons, float * _seed)
     __m128i vseed  = _mm_cvtps_epi32(_mm_loadu_ps(_seed));
 
     __m128 working;
-    for (int k = 0; k < 8; k++) {
+    for (int k = 0; k < 4; k++) {
         photons--;
         if (photons < 0) {
             is_working[k] = 0.0f;
@@ -124,7 +124,7 @@ static void photon(int photons, float * _seed)
         _mm_store_ps(lheat, _heat);
         _mm_store_ps(lheat2, _mm_mul_ps(_heat, _heat));
         char is_alive = _mm_movemask_ps(working);
-        for (int k = 0; k < 8; k++) {
+        for (int k = 0; k < 4; k++) {
             if ((is_alive & (1 << k)) != 0) {
                 heat[(int)shellidx[k]]  += lheat[k];
                 heat2[(int)shellidx[k]] += lheat2[k];
@@ -177,7 +177,7 @@ static void photon(int photons, float * _seed)
         char has_returned = _mm_movemask_ps(_mm_and_ps(working, return_mask));
         _mm_store_ps(is_working, working);
         // Check photons
-        for (int k = 0; k < 8; k++) {
+        for (int k = 0; k < 4; k++) {
             if ((has_returned & (1 << k)) != 0) {
                 photons -= 1;
                 if (photons < 0) {
