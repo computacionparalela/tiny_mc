@@ -18,7 +18,7 @@ Como métrica decidimos utilizar la cantidad de fotones procesados por segundo, 
 
 Se han realizado dos modificaciones relevantes al código de la primer entrega:
 * Decidimos utilizar el generador de números aleatorios xoshiro, ya que nos permite mantener un rendimiento similar al obtenido mediante el generador
-  Lehmery posee un código que encontramos más simple para vectorizar mediante intrinsics.
+  Lehmer y posee un código que encontramos más simple para vectorizar mediante intrinsics.
 * Utilizamos una aproximación de la función log para mejorar la performance general del programa.
 
 
