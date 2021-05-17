@@ -3,11 +3,16 @@
 #include <time.h> // time
 
 #ifndef SHELLS
+#define N_THREADS         8 // discretization level
+#endif
+
+
+#ifndef SHELLS
 #define SHELLS            101 // discretization level
 #endif
 
 #ifndef PHOTONS
-#define PHOTONS           131072 // 32K photons
+#define PHOTONS           8388608 // 32K photons
 #endif
 
 #ifndef MU_A

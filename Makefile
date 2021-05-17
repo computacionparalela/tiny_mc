@@ -12,7 +12,7 @@ ISPC_TARGET = avx2-i32x16
 ##-ftree-vectorize
 
 # Flags
-OPT_FLAGS = -O2 -ffast-math -march=native #-floop-nest-optimize
+OPT_FLAGS = -O3 -ffast-math -march=native -fopenmp -lpthread#-floop-nest-optimize
 CFLAGS = -std=c11 -Wall -Wextra -Wshadow -DRAND7 -DVERBOSE -DSEED=223 $(OPT_FLAGS) $(ADD_FLAGS)
 LDFLAGS = -lm
 
@@ -24,6 +24,7 @@ C_SOURCES = tiny_mc.c wtime.c
 C_OBJS = $(patsubst %.c, %.o, $(C_SOURCES))
 C_OBJS_256 =  wtime.h wtime.c params.h tiny_mc_m256.c
 C_OBJS_128 =  wtime.h wtime.c params.h tiny_mc_m128.c
+C_OBJS_256_OMP =  wtime.h wtime.c params.h tiny_mc_m256_omp.c
 
 # Rules
 all: $(TARGET) ispc m128 m256
@@ -40,12 +41,16 @@ m256: $(C_OBJS)
 	$(CC) $(CFLAGS) $(LDFLAGS) $(C_OBJS_256) $(ADD_FLAGS) -DM256
 	@mv a.out tiny_mc_m256
 
+omp: $(C_OBJS)
+	$(CC) $(CFLAGS) $(LDFLAGS) $(C_OBJS_256_OMP) $(ADD_FLAGS) -DM256
+	@mv a.out tiny_mc_m256_omp
+
 m128: $(C_OBJS)
-	$(CC) $(CFLAGS) $(LDFLAGS) $(C_OBJS_128) $(ADD_FLAGS) -DM256
+	$(CC) $(CFLAGS) $(LDFLAGS) $(C_OBJS_256_OMP) $(ADD_FLAGS) -DM256
 	@mv a.out tiny_mc_m128
 
 clean_gcda:
 	rm -f *.gcda
 
 clean:
-	rm -f $(TARGET) *.o "ispc/$(TARGET)" tiny_mc_m256 tiny_mc_m128 tiny_mc_ispc *.gch ispc/*.o
+	rm -f $(TARGET) *.o "ispc/$(TARGET)" tiny_mc_m256 tiny_mc_m256_omp tiny_mc_m128 tiny_mc_ispc *.gch ispc/*.o

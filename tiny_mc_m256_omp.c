@@ -10,6 +10,7 @@
 #include "params.h"
 #include "wtime.h"
 
+#include <omp.h>
 #include <assert.h>
 #include <math.h>
 #include <stdio.h>
@@ -26,8 +27,6 @@ char t3[] = "CPU version, adapted for PEAGPGPU by Gustavo Castellano"
             " and Nicolas Wolovick";
 
 // global state, heat and heat square in each shell
-static float heat[SHELLS][2];
-static float seed[8];// Avoid buffer overflow
 
 /***
  * Photon
@@ -60,7 +59,7 @@ static inline __m256 _m256_rand(__m256i * _seed)
                          _mm256_set1_ps(4294967296.0f));
 }
 
-static void photon(int photons, float * _seed)
+static void photon(float (*heat)[2], int photons, float * _seed)
 {
     float lheat[8], lheat2[8], is_working[8], shellidx[8];
     /* Step 1: Launching a photon packet */
@@ -103,7 +102,7 @@ static void photon(int photons, float * _seed)
     do {
         /* Step 2: Step size selection and photon packet movement */
         // float t = -logf(FAST_RAND());
-        __m256 t = _mm256_sub_ps(_mm256_setzero_ps(), _m256_flog(_m256_rand(&vseed)));        // FIX
+        __m256 t = _mm256_sub_ps(_mm256_setzero_ps(), _m256_flog(_m256_rand(&vseed)));
         /* move */
         // x += t * u;
         x = _mm256_add_ps(_mm256_mul_ps(t, u), x);
@@ -166,8 +165,7 @@ static void photon(int photons, float * _seed)
         //        }
         // }
         __m256 weight_mask = _mm256_cmp_ps(weight, _mm256_set1_ps(0.001f), _CMP_LT_OQ);
-        __m256 return_mask =
-            _mm256_and_ps(weight_mask, _mm256_cmp_ps(_m256_rand(&vseed), _mm256_set1_ps(0.1f), _CMP_GT_OQ));
+        __m256 return_mask = _mm256_and_ps(weight_mask, _mm256_cmp_ps(_m256_rand(&vseed), _mm256_set1_ps(0.1f), _CMP_GT_OQ));
         weight = _mm256_blendv_ps(weight, _mm256_div_ps(weight, _mm256_set1_ps(0.1f)), weight_mask);
 
         // Update x,y,z,u,v,w,weight
@@ -206,6 +204,9 @@ int main(void)
         printf("# Photons    = %8d\n#\n", PHOTONS);
     }
 
+    static float heat[SHELLS][2];
+    static float seed[8];
+
     // configure RNG
     srand(SEED);
     for (int i = 0; i < 8; i++) {
@@ -213,20 +214,19 @@ int main(void)
     }
     #pragma omp parallel for
     for (int i = 0; i < 8; ++i) {
-    	photon(256, seed);
+    	photon(heat, 256, seed);
     }
     // first run
     memset(heat, 0, 2 * sizeof(float) * SHELLS);
     // start timer
     double start = wtime();
     // simulation
-    #pragma omp parallel for
-    for (int i = 0; i < 8; ++i) {
-    	photon(PHOTONS / 8, seed);
-	for(int j=0;j<50000;j++){
-	//	heat[rand()%SHELLS][0]++;
-	//	heat[rand()%SHELLS][1]++; 
+    #pragma omp parallel private(seed) reduction(+:heat[:SHELLS][:2]) num_threads(N_THREADS)
+    {
+	for(int i=0;i<8;i++){
+	    seed[i] = (i+1)*223*(10000*omp_get_thread_num()+1);
 	}
+    	photon(heat, PHOTONS / N_THREADS, seed);
     }
     // stop timer
     double end = wtime();
