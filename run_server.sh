@@ -9,6 +9,13 @@
 . /etc/profile
 source /opt/intel/oneapi/compiler/latest/env/vars.sh
 
-srun ./run_compiler.sh
-srun ./run_fotones.sh
-srun ./run_target.sh
+export OMP_NUM_THREADS=28
+export OMP_WAIT_POLICY=active
+export OMP_DYNAMIC=false 
+export OMP_PROC_BIND=true
+
+#./run_schedule.sh
+#./run_critical.sh
+#./run_threads.sh
+#./run_fotones.sh
+#./run_fotones_big.sh
