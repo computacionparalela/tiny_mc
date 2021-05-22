@@ -14,6 +14,8 @@ export OMP_WAIT_POLICY=active
 export OMP_DYNAMIC=false
 export OMP_PROC_BIND=true
 
+./run_fotones_2.sh
+
 #./run_fotones_1.sh
 #./run_fotones_2.sh
 #./run_fotones_3.sh

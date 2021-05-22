@@ -5,9 +5,9 @@ TOTAL_MS=0
 TOTAL_PH=0
 ITERATIONS=10
 
-echo "Ejecutando run_fotones_big2.sh"
+echo "Ejecutando run_fotones_1.sh"
 
-for cnt_photons in "67108864"
+for cnt_photons in "16384" "32768" "65536" "131072" "262144" "524288"
 do
 	make clean
 	make ADD_FLAGS="-DPHOTONS=$cnt_photons -DREDUCTION -DTHREADS=28"
@@ -16,7 +16,6 @@ do
 	do
 		TOTAL_MS=0
 		TOTAL_PH=0
-                ./$version > /dev/null
 		for it in $(seq 1 $ITERATIONS)
 		do
 			sleep 3
@@ -32,7 +31,7 @@ do
 
 		TOTAL_MS=$(echo $TOTAL_MS $ITERATIONS | awk '{printf "%5.3f\n",$1/$2}')
 		TOTAL_PH=$(echo $TOTAL_PH $ITERATIONS | awk '{printf "%5.3f\n",$1/$2}')
-		echo "$cnt_photons $version:"	
+		echo "$cnt_photons $version:"
 		echo "    >>  TOTAL_MS: $TOTAL_MS"
 		echo "    >>> TOTAL_PH: $TOTAL_PH"
 	done

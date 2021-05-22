@@ -5,14 +5,14 @@ TOTAL_MS=0
 TOTAL_PH=0
 ITERATIONS=10
 
-echo "Ejecutando run_fotones_big3.sh"
+echo "Ejecutando run_threads_1.sh"
 
-for cnt_photons in "134217728" "268435456"
+for thr in $(seq 2 2 22)
 do
 	make clean
-	make ADD_FLAGS="-DPHOTONS=$cnt_photons -DREDUCTION -DTHREADS=28"
+	make ADD_FLAGS="-DREDUCTION -DTHREADS=$thr"
 
-	for version in "tiny_mc_omp" #"tiny_mc_m256" "tiny_mc_m256_omp" "tiny_mc_omp"
+	for version in "tiny_mc_m256_omp" "tiny_mc_omp"
 	do
 		TOTAL_MS=0
 		TOTAL_PH=0
@@ -32,7 +32,7 @@ do
 
 		TOTAL_MS=$(echo $TOTAL_MS $ITERATIONS | awk '{printf "%5.3f\n",$1/$2}')
 		TOTAL_PH=$(echo $TOTAL_PH $ITERATIONS | awk '{printf "%5.3f\n",$1/$2}')
-		echo "$cnt_photons $version:"
+		echo "$thr $version:"
 		echo "    >>  TOTAL_MS: $TOTAL_MS"
 		echo "    >>> TOTAL_PH: $TOTAL_PH"
 	done

@@ -5,9 +5,9 @@ TOTAL_MS=0
 TOTAL_PH=0
 ITERATIONS=10
 
-echo "Ejecutando run_fotones_big1.sh"
+echo "Ejecutando run_fotones_3.sh"
 
-for cnt_photons in "1048576"  "2097152" "4194304" "8388608"
+for cnt_photons in "67108864"
 do
 	make clean
 	make ADD_FLAGS="-DPHOTONS=$cnt_photons -DREDUCTION -DTHREADS=28"

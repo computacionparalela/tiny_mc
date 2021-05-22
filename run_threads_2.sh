@@ -5,7 +5,7 @@ TOTAL_MS=0
 TOTAL_PH=0
 ITERATIONS=10
 
-echo "Ejecutando run_threads.sh"
+echo "Ejecutando run_threads_2.sh"
 
 for thr in $(seq 22 2 32)
 do
