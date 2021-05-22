@@ -5,17 +5,18 @@ TOTAL_MS=0
 TOTAL_PH=0
 ITERATIONS=10
 
-echo "Ejecutando run_fotones_big.sh"
+echo "Ejecutando run_fotones_big2.sh"
 
-for cnt_photons in "1048576"  "2097152" "4194304" "8388608" "16777216" "33554432"
+for cnt_photons in "67108864"
 do
 	make clean
-	make ADD_FLAGS="-DPHOTONS=$cnt_photons -DREDUCTION -DTHREADS=8"
+	make ADD_FLAGS="-DPHOTONS=$cnt_photons -DREDUCTION -DTHREADS=28"
 
 	for version in "tiny_mc_m256" "tiny_mc_m256_omp" "tiny_mc_omp"
 	do
 		TOTAL_MS=0
 		TOTAL_PH=0
+                ./$version > /dev/null
 		for it in $(seq 1 $ITERATIONS)
 		do
 			sleep 3

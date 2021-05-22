@@ -31,7 +31,7 @@ do
 
 		TOTAL_MS=$(echo $TOTAL_MS $ITERATIONS | awk '{printf "%5.3f\n",$1/$2}')
 		TOTAL_PH=$(echo $TOTAL_PH $ITERATIONS | awk '{printf "%5.3f\n",$1/$2}')
-		echo "$cnt_photons $version:"	
+		echo "$cnt_photons $version:"
 		echo "    >>  TOTAL_MS: $TOTAL_MS"
 		echo "    >>> TOTAL_PH: $TOTAL_PH"
 	done

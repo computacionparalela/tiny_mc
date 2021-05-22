@@ -1,7 +1,7 @@
 .SILENT:
 
 # Compilers
-CC = gcc#clang-11 gcc-10 icc
+CC = gcc-10 #clang-11 gcc-10 icc
 CXX = g++-10
 
 

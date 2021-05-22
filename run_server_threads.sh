@@ -14,10 +14,8 @@ export OMP_WAIT_POLICY=active
 export OMP_DYNAMIC=false
 export OMP_PROC_BIND=true
 
-sleep 60
-
 #./run_schedule.sh
-#./run_threads.sh
+./run_threads.sh
 #./run_fotones.sh
 #./run_fotones_big1.sh
 #./run_fotones_big2.sh

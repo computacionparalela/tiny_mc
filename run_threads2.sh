@@ -5,17 +5,18 @@ TOTAL_MS=0
 TOTAL_PH=0
 ITERATIONS=10
 
-echo "Ejecutando run_schedule.sh"
+echo "Ejecutando run_threads.sh"
 
-for sch in guided static dynamic
+for thr in $(seq 22 2 32)
 do
 	make clean
-	make ADD_FLAGS="-DSCHEDULE=$sch -DREDUCTION"
+	make ADD_FLAGS="-DREDUCTION -DTHREADS=$thr"
 
-	for version in "tiny_mc_m256_omp"
+	for version in "tiny_mc_m256_omp" "tiny_mc_omp"
 	do
 		TOTAL_MS=0
 		TOTAL_PH=0
+                ./$version > /dev/null
 		for it in $(seq 1 $ITERATIONS)
 		do
 			sleep 3
@@ -31,7 +32,7 @@ do
 
 		TOTAL_MS=$(echo $TOTAL_MS $ITERATIONS | awk '{printf "%5.3f\n",$1/$2}')
 		TOTAL_PH=$(echo $TOTAL_PH $ITERATIONS | awk '{printf "%5.3f\n",$1/$2}')
-		echo "$sch $version:"
+		echo "$thr $version:"
 		echo "    >>  TOTAL_MS: $TOTAL_MS"
 		echo "    >>> TOTAL_PH: $TOTAL_PH"
 	done

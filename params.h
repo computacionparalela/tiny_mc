@@ -6,11 +6,11 @@
 #include <sys/sysinfo.h>
 
 #ifndef THREADS
-#define THREADS         get_nprocs_conf() // discretization level
+#define THREADS         28
 #endif
 
 #ifndef SCHEDULE
-#define SCHEDULE         guided // discretization level
+#define SCHEDULE         guided
 #endif
 
 #ifndef SHELLS
@@ -18,7 +18,7 @@
 #endif
 
 #ifndef PHOTONS
-#define PHOTONS           524288 // 32K photons
+#define PHOTONS           8388608 // 32K photons
 #endif
 
 #ifndef MU_A

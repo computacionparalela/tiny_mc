@@ -7,7 +7,7 @@ ITERATIONS=10
 
 echo "Ejecutando run_threads.sh"
 
-for thr in $(seq 1 50)
+for thr in $(seq 2 2 22)
 do
 	make clean
 	make ADD_FLAGS="-DREDUCTION -DTHREADS=$thr"
@@ -16,6 +16,7 @@ do
 	do
 		TOTAL_MS=0
 		TOTAL_PH=0
+                ./$version > /dev/null
 		for it in $(seq 1 $ITERATIONS)
 		do
 			sleep 3
@@ -31,7 +32,7 @@ do
 
 		TOTAL_MS=$(echo $TOTAL_MS $ITERATIONS | awk '{printf "%5.3f\n",$1/$2}')
 		TOTAL_PH=$(echo $TOTAL_PH $ITERATIONS | awk '{printf "%5.3f\n",$1/$2}')
-		echo "$thr $version:"	
+		echo "$thr $version:"
 		echo "    >>  TOTAL_MS: $TOTAL_MS"
 		echo "    >>> TOTAL_PH: $TOTAL_PH"
 	done
