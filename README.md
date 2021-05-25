@@ -147,7 +147,7 @@ En esta gráfica se muestra la función identidad (que podemos considerar como u
 
 ![Eficiencia](https://raw.githubusercontent.com/barufa/tiny_mc/lab3/imagenes/eficiencia.png "Eficiencia")
 
-Podemos ver con la ayuda de ambos gráficos que la eficiencia obtenida es cercana al 90%, esto podría deberse al overhead generado por la creación de los hilos o algún tipo de problema de sincronización (como false sharing) que se esté produciendo dentro de nuestro programa.
+Podemos ver con la ayuda de ambos gráficos que la eficiencia obtenida es cercana al 90%.
 
 ## Conclusiones
 
