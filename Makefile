@@ -29,15 +29,15 @@ C_OBJS_256_OMP =  wtime.h wtime.c params.h tiny_mc_m256_omp.c
 all: m256 omp m256_omp
 
 m256:
-	$(CC) $(CFLAGS) $(LDFLAGS) $(C_OBJS_256) $(ADD_FLAGS) -DM256
+	$(CC) $(CFLAGS) $(LDFLAGS) $(C_OBJS_256) -DM256
 	@mv a.out tiny_mc_m256
 
 m256_omp:
-	$(CC) $(CFLAGS) $(LDFLAGS) $(C_OBJS_256_OMP) $(ADD_FLAGS) -DM256
+	$(CC) $(CFLAGS) $(LDFLAGS) $(C_OBJS_256_OMP) -DM256
 	@mv a.out tiny_mc_m256_omp
 
 omp: 
-	$(CC) $(CFLAGS) $(LDFLAGS) $(C_OBJS_OMP) $(ADD_FLAGS) -DM256
+	$(CC) $(CFLAGS) $(LDFLAGS) $(C_OBJS_OMP) -DM256
 	@mv a.out tiny_mc_omp
 
 clean:
