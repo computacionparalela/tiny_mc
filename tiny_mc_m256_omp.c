@@ -25,10 +25,6 @@ char t2[] = "1 W Point Source Heating in Infinite Isotropic Scattering Medium";
 char t3[] = "CPU version, adapted for PEAGPGPU by Gustavo Castellano"
             " and Nicolas Wolovick";
 
-// global state, heat and heat square in each shell
-static float heat[SHELLS][2];
-static float seed[8];// Avoid buffer overflow
-
 /***
  * Photon
  ***/
@@ -60,7 +56,7 @@ static inline __m256 _m256_rand(__m256i * _seed)
                              _mm256_set1_ps(4294967296.0f));
 }
 
-static void photon(int photons, float * _seed)
+static void photon(float (*heat)[2], int photons, float * _seed)
 {
         float lheat[8], lheat2[8], is_working[8], shellidx[8];
         /* Step 1: Launching a photon packet */
@@ -130,25 +126,8 @@ static void photon(int photons, float * _seed)
                 for (int k = 0; k < 8; k++) {
                         if ((is_alive & (1 << k)) != 0) {
                                 unsigned int idx = shellidx[k];
-#ifdef REDUCTION
                                 heat[idx][0] += lheat[k];
                                 heat[idx][1] += lheat2[k];
-#else
-#ifdef ATOMIC
-                                const float heat_inc  = lheat[k];
-                                const float heat_int2 = lheat2[k];
-        #pragma omp atomic
-                                heat[idx][0] += heat_inc;
-            #pragma omp atomic
-                                heat[idx][1] += heat_int2;
-#else
-        #pragma omp critical
-                                {
-                                        heat[idx][0] += lheat[k];
-                                        heat[idx][1] += lheat[k];
-                                }
-#endif
-#endif
                         }
                 }
                 // weight *= albedo;
@@ -216,6 +195,9 @@ static void photon(int photons, float * _seed)
 
 int main(void)
 {
+
+        static float heat[SHELLS][2];
+        static float seed[8];// Avoid buffer overflow
         if (verbose) { // heading
                 printf("# %s\n# %s\n# %s\n", t1, t2, t3);
                 printf("# Scattering = %8.3f/cm\n", MU_S);
@@ -230,24 +212,20 @@ int main(void)
         }
     #pragma omp parallel for
         for (int i = 0; i < 8; ++i) {
-                photon(256, seed);
+                photon(heat, 256, seed);
         }
         // first run
         memset(heat, 0, 2 * sizeof(float) * SHELLS);
         // start timer
         double start = wtime();
         // simulation
-#ifdef REDUCTION
-    #pragma omp parallel for private(seed) num_threads(THREADS) schedule(SCHEDULE) reduction(+:heat[:SHELLS][:2]) default(none)
-        for (int i = 0; i < 2000; ++i) {
-                photon(PHOTONS / 2000, seed);
+    #pragma omp parallel for firstprivate(seed) num_threads(THREADS) schedule(SCHEDULE) reduction(+:heat[:SHELLS][:2]) default(none)
+        for (int i = 0; i < CHUNKS; ++i) {
+                for(int j=0; j<8; j++) {
+                        seed[j] *= i+1;
+                }
+                photon(heat, PHOTONS / CHUNKS, seed);
         }
-#else
-    #pragma omp parallel for private(seed) shared(heat) num_threads(THREADS) schedule(SCHEDULE) default(none)
-        for (int i = 0; i < 2000; ++i) {
-                photon(PHOTONS / 2000, seed);
-        }
-#endif
         // stop timer
         double end = wtime();
         assert(start <= end);
