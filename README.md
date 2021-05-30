@@ -149,6 +149,13 @@ En esta gráfica se muestra la función identidad (que podemos considerar como u
 
 Podemos ver con la ayuda de ambos gráficos que la eficiencia obtenida es cercana al 90%.
 
+Para concluir, se realizó un benchmark mediante `Intel Advisor Roofline` que arrojó los siguientes resultados
+
+![Roofline](https://raw.githubusercontent.com/barufa/tiny_mc/lab3/imagenes/RoofLine_Benchmark.jpg "Roofline")
+
+Como se puede observar, nuestro programa alcanza una performance de 137 GFLOPS. Un problema que muestra esta gráfica es que nuestro programa hace uso de los cachés L2 y L3, lo cual reduce el rendimiento. Sin embargo, debido a las copias locales que realizamos para evitar eventos de sincronización entre los hilos considero que sería realmente difícil reducir la memoria requerida por nuestro programa.
+
+
 ## Conclusiones
 
 Si bien hay lugar para mejoras, considero que se obtuvieron muy buenos resultados mediante la inserción de unas pocas líneas de código de OpenMP. 
