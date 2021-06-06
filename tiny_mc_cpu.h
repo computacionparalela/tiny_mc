@@ -1,5 +1,3 @@
-#define _XOPEN_SOURCE 500  // M_PI
-
 #include "params.h"
 #include "wtime.h"
 
@@ -179,22 +177,21 @@ void photon(float (*heat)[2], int photons, float * _seed)
 
 
 void run_cpu_tiny_mc(float (*heat)[2], const unsigned photons){
-	#pragma omp parallel for shared(photons) num_threads(THREADS) schedule(SCHEDULE) reduction(+:heat[:SHELLS][:2]) default(none)
-	for (int i = 0; i < CHUNKS; ++i) {
-		float seed[8];
-		for(int j=0; j<8; j++) {
-				seed[j] *= ((i+1) * 8 + j) * 223;
-		}
-		photon(heat, photons / CHUNKS, seed);
-	}
-	float seed[8] = { 223 * (CHUNKS + 0),
-					  223 * (CHUNKS + 1),
-					  223 * (CHUNKS + 2),
-					  223 * (CHUNKS + 3),
-					  223 * (CHUNKS + 4),
-					  223 * (CHUNKS + 5),
-					  223 * (CHUNKS + 6),
-					  223 * (CHUNKS + 7),
-	};
-	photon(heat, photons % CHUNKS, seed);
+    #pragma omp parallel for shared(photons) num_threads(THREADS) schedule(SCHEDULE) reduction(+:heat[:SHELLS][:2]) default(none)
+        for (int i = 0; i < CHUNKS; ++i) {
+                float seed[8];
+                for(int j=0; j<8; j++) {
+                        seed[j] *= ((i+1) * 8 + j) * 223;
+                }
+                photon(heat, photons / CHUNKS, seed);
+        }
+        float seed[8] = { 223 * (CHUNKS + 0),
+                          223 * (CHUNKS + 1),
+                          223 * (CHUNKS + 2),
+                          223 * (CHUNKS + 3),
+                          223 * (CHUNKS + 4),
+                          223 * (CHUNKS + 5),
+                          223 * (CHUNKS + 6),
+                          223 * (CHUNKS + 7),};
+        photon(heat, photons % CHUNKS, seed);
 }

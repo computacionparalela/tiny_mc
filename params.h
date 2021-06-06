@@ -17,7 +17,6 @@
 #define BLOCK_SIZE        128
 #endif
 
-
 #ifndef CHUNKS
 #define CHUNKS            2000
 #endif
@@ -49,6 +48,11 @@
 #ifndef SEED
 #define SEED              (time(NULL)) // random seed
 #endif
+
+#ifndef M_PI
+#define M_PI              3.14159265358979323846
+#endif
+
 
 #ifndef VERBOSE
 static const unsigned verbose = 0;

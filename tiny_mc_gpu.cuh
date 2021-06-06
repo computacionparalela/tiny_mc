@@ -102,14 +102,14 @@ static __global__ void photon(float ** global_heat, int photons)
 
 unsigned run_gpu_tiny_mc(float ** heat, const int photons, const bool sync = true)
 {
-    static const unsigned photons_per_thread = 1<<12;
+    static const unsigned photons_per_thread = 1 << 12;
     dim3 block(BLOCK_SIZE);
     dim3 grid((photons / photons_per_thread) / BLOCK_SIZE);
     photon << < grid, block >> > (heat, photons_per_thread);
     checkCudaCall(cudaGetLastError());
-    if(sync){
+    if (sync) {
         checkCudaCall(cudaDeviceSynchronize());
     }
 
-    return (1<<12) * block.x * grid.x;
+    return (1 << 12) * block.x * grid.x;
 }
