@@ -13,7 +13,7 @@ ADD_FLAGS =
 ##-ftree-vectorize
 
 # Flags
-OPT_FLAGS = -O3 -ffast-math -march=native -fopenmp -lpthread#-floop-nest-optimize
+OPT_FLAGS = -O3 -ffast-math -march=native -fopenmp -lpthread -floop-nest-optimize -flto
 CFLAGS = -std=c11 -Wall -Wextra -Wshadow -Wno-unknown-pragmas -DRAND7 -DVERBOSE -DSEED=223 $(OPT_FLAGS) $(ADD_FLAGS)
 LDFLAGS = -lm
 
