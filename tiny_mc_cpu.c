@@ -226,7 +226,7 @@ int main(void)
                 }
                 photon(heat, PHOTONS / CHUNKS, seed);
         }
-	photon(heat, PHOTONS % CHUNKS, seed);
+        photon(heat, PHOTONS % CHUNKS, seed);
         // stop timer
         double end = wtime();
         assert(start <= end);

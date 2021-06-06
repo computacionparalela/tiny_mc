@@ -9,6 +9,11 @@
 #define THREADS           28
 #endif
 
+#ifndef CUDA_CORES
+#define CUDA_CORES        384
+#endif
+
+
 #ifndef CHUNKS
 #define CHUNKS            2000
 #endif
@@ -22,7 +27,7 @@
 #endif
 
 #ifndef PHOTONS
-#define PHOTONS           8388608
+#define PHOTONS           (1 << 20)
 #endif
 
 #ifndef MU_A
@@ -46,5 +51,8 @@ static const unsigned verbose = 0;
 #else
 static const unsigned verbose = 1;
 #endif
+
+#define ALBEDO         (MU_S / (MU_S + MU_A))
+#define SHELLS_PER_MFP (1e4 / MICRONS_PER_SHELL / (MU_A + MU_S))
 
 #endif //PARAMS_H

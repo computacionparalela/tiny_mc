@@ -3,7 +3,7 @@
 # Compilers
 CC = gcc-10 #clang-11 gcc-10 icc
 CXX = g++-10
-
+NVCC = nvcc
 
 ADD_FLAGS = 
 
@@ -17,28 +17,24 @@ OPT_FLAGS = -O3 -ffast-math -march=native -fopenmp -lpthread#-floop-nest-optimiz
 CFLAGS = -std=c11 -Wall -Wextra -Wshadow -Wno-unknown-pragmas -DRAND7 -DVERBOSE -DSEED=223 $(OPT_FLAGS) $(ADD_FLAGS)
 LDFLAGS = -lm
 
+CU_FLAGS_XCOMP = -Xcompiler=-I/usr/lib/gcc/x86_64-linux-gnu/5.5.0/include/ -Xcompiler=-fopenmp=libiomp5 -Xcompiler=-lm -Xcompiler=-O3 -Xcompiler=-march=native -Xcompiler=-Wno-unused-command-line-argument -Xcompiler=-DVERBOSE
+CU_FLAGS = -ccbin clang-4.0 --use_fast_math $(CU_FLAGS_XCOMP)
+
 # Binary file
 TARGET = tiny_mc
 
 # Files
-C_OBJS_256 =  wtime.h wtime.c params.h tiny_mc_m256.c
-C_OBJS_OMP =  wtime.h wtime.c params.h tiny_mc_omp.c
-C_OBJS_256_OMP =  wtime.h wtime.c params.h tiny_mc_m256_omp.c
+C_OBJS_CPU =  wtime.h wtime.c params.h tiny_mc_cpu.c
 
 # Rules
-all: m256 omp m256_omp
+all: cpu gpu
 
-m256:
-	$(CC) $(CFLAGS) $(LDFLAGS) $(C_OBJS_256) -DM256
-	@mv a.out tiny_mc_m256
+cpu:
+	$(CC) $(CFLAGS) $(LDFLAGS) $(C_OBJS_CPU) -DM256
+	@mv a.out tiny_mc_cpu
 
-m256_omp:
-	$(CC) $(CFLAGS) $(LDFLAGS) $(C_OBJS_256_OMP) -DM256
-	@mv a.out tiny_mc_m256_omp
-
-omp: 
-	$(CC) $(CFLAGS) $(LDFLAGS) $(C_OBJS_OMP) -DM256
-	@mv a.out tiny_mc_omp
+gpu:
+	$(NVCC) $(CU_FLAGS) tiny_mc_gpu.cu -o tiny_mc_gpu
 
 clean:
-	rm -f $(TARGET) *.o "ispc/$(TARGET)" tiny_mc_m256_omp tiny_mc_m256 tiny_mc_omp tiny_mc_m128 tiny_mc_ispc *.gch ispc/*.o
+	rm -f $(TARGET) *.o "ispc/$(TARGET)" tiny_mc_cpu tiny_mc_gpu *.gch ispc/*.o
