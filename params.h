@@ -13,6 +13,10 @@
 #define CUDA_CORES        384
 #endif
 
+#ifndef BLOCK_SIZE
+#define BLOCK_SIZE        128
+#endif
+
 
 #ifndef CHUNKS
 #define CHUNKS            2000
@@ -27,7 +31,7 @@
 #endif
 
 #ifndef PHOTONS
-#define PHOTONS           (1 << 20)
+#define PHOTONS           (1 << 25)
 #endif
 
 #ifndef MU_A

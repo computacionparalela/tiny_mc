@@ -9,6 +9,18 @@ char t2[] = "1 W Point Source Heating in Infinite Isotropic Scattering Medium";
 char t3[] = "CPU version, adapted for PEAGPGPU by Gustavo Castellano"
             " and Nicolas Wolovick";
 
+#define checkCudaCall(val) _checkCudaReturnValue((val), #val, __FILE__, __LINE__)
+
+inline void _checkCudaReturnValue(cudaError_t result, const char* const func, const char* const file, const int line)
+{
+    if (result != cudaSuccess) {
+        fprintf(stderr, "CUDA error at %s:%d code=%d(%s) \"%s\" \n",
+                file, line, static_cast<int>(result), cudaGetErrorString(result), func);
+        cudaDeviceReset();
+        // Make sure we call CUDA Device Reset before exiting
+        exit(static_cast<int>(result));
+    }
+}
 
 double wtime(void)
 {
@@ -18,13 +30,15 @@ double wtime(void)
     return 1e-9 * ts.tv_nsec + (double)ts.tv_sec;
 }
 
-__global__ void photon(float ** heat, int photons)
+__global__ void photon(float ** global_heat, int photons)
 {
     /* Step 0: Inicializo el PRNG */
     const unsigned idx = blockIdx.x * blockDim.x + threadIdx.x;
     curandStatePhilox4_32_10_t state;
     curand_init((7 + idx) * 9967, (idx + 1), (7 + idx) * 197, &state);
 
+
+    float heat[SHELLS][2];
     float4 rand = curand_uniform4(&state);
 
     for (int cnt = 0; cnt < photons; cnt++) {
@@ -49,8 +63,8 @@ __global__ void photon(float ** heat, int photons)
             float _heat = (1.0f - ALBEDO) * weight;
             weight *= ALBEDO;
             // Barrera de sincronizacion
-            heat[idx][2 * shell + 0] += _heat;
-            heat[idx][2 * shell + 1] += _heat * _heat;/* add up squares */
+            heat[shell][0] += _heat;
+            heat[shell][1] += _heat * _heat;/* add up squares */
             ///////////////////////////
             /* New direction, rejection method */
             float x1, x2;
@@ -74,23 +88,30 @@ __global__ void photon(float ** heat, int photons)
         }
     }
 
+    __shared__ float shared_heat[SHELLS][2];
+    for (int i = 0; i < SHELLS; i++) {
+        atomicAdd(&shared_heat[i][0], heat[i][0]);
+        atomicAdd(&shared_heat[i][1], heat[i][1]);
+    }
+
+    __syncthreads();
+    if (threadIdx.x == 0) {
+        for (int i = 0; i < SHELLS; i++) {
+            atomicAdd(&global_heat[i][0], shared_heat[i][0]);
+            atomicAdd(&global_heat[i][1], shared_heat[i][1]);
+        }
+    }
+
     return;
 }
 
-unsigned run_kernel(float (*_heat)[2],float ** heat, int photons)
+unsigned photons_gpu(float ** heat, int photons)
 {
-    dim3 grid(1);
-    dim3 block(CUDA_CORES);
-    photon << < grid, block >> > (heat, photons / CUDA_CORES);
-    cudaDeviceSynchronize();
-
-    #pragma omp parallel for shared(heat) schedule(SCHEDULE) reduction(+:_heat[:SHELLS][:2]) default(none)
-    for (int i = 0; i < CUDA_CORES; i++) {
-        for (int j = 0; j < SHELLS; j++) {
-            _heat[j][0] += heat[i][2 * j + 0];
-            _heat[j][1] += heat[i][2 * j + 1];
-        }
-    }
+    dim3 block(BLOCK_SIZE);
+    dim3 grid((photons / (1<<12)) / BLOCK_SIZE);
+    photon << < grid, block >> > (heat, (1<<12));
+    checkCudaCall(cudaGetLastError());
+    checkCudaCall(cudaDeviceSynchronize());
 
     return 0;
 }
@@ -105,23 +126,15 @@ int main()
         printf("# Photons    = %8d\n#\n", PHOTONS);
     }
 
-
-    float _heat[SHELLS][2];
     float ** heat;
-    cudaMallocManaged(&heat, CUDA_CORES * sizeof(float *));
-    for (int i = 0; i < CUDA_CORES; i++) {
-        cudaMallocManaged(&heat[i], 2 * SHELLS * sizeof(float));
-        for (int j = 0; j < 2 * SHELLS; j++) {
-            heat[i][j] = 0.0f;
-        }
-    }
-
+    cudaMallocManaged(&heat, SHELLS * sizeof(float *));
     for (int i = 0; i < SHELLS; i++) {
-        _heat[i][0] = _heat[i][1] = 0.0f;
+        cudaMallocManaged(&heat[i], 2 * sizeof(float));
+        heat[i][0] = heat[i][1] = 0.0f;
     }
 
     double start = wtime();
-    run_kernel(_heat, heat, PHOTONS);
+    photons_gpu(heat, PHOTONS);
     double end = wtime();
     assert(start <= end);
     double elapsed = (end - start) * 1000.0;
