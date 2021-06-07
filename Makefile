@@ -18,7 +18,7 @@ CFLAGS = -std=c11 -Wall -Wextra -Wshadow -Wno-unknown-pragmas -DRAND7 -DVERBOSE 
 LDFLAGS = -lm
 
 CU_FLAGS_XCOMP = -Xcompiler=-I/usr/lib/gcc/x86_64-linux-gnu/5.5.0/include/ -Xcompiler=-fopenmp=libiomp5 -Xcompiler=-lm -Xcompiler=-O3 -Xcompiler=-march=native -Xcompiler=-Wno-unused-command-line-argument -Xcompiler=-DVERBOSE
-CU_FLAGS = -ccbin clang-4.0 --use_fast_math -O3 $(CU_FLAGS_XCOMP)
+CU_FLAGS = -ccbin clang-4.0 --use_fast_math -O2 $(CU_FLAGS_XCOMP)
 
 # Binary file
 TARGET = tiny_mc
