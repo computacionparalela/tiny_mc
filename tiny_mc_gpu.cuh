@@ -4,8 +4,6 @@
 
 #include "params.h"
 
-#define MAX_RAND_MATRIX 170
-
 #define checkCudaCall(val) _checkCudaReturnValue((val), #val, __FILE__, __LINE__)
 
 inline void _checkCudaReturnValue(cudaError_t result, const char* const func, const char* const file, const int line)
@@ -27,22 +25,6 @@ double wtime(void)
     return 1e-9 * ts.tv_nsec + (double)ts.tv_sec;
 }
 
-inline __device__ void init_rand_matrix(float rand_matrix[MAX_RAND_MATRIX][2], curandStatePhilox4_32_10_t * state)
-{
-    for (int i = 0; i < MAX_RAND_MATRIX; i += 2) {
-        float4 rand = curand_uniform4(state);
-        float r1, r2, theta1, theta2;
-        r1 = sqrt(rand.x);
-        r2 = sqrt(rand.y);
-        theta1 = rand.z * 2.0f * M_PI;
-        theta2 = rand.w * 2.0f * M_PI;
-        rand_matrix[i][0] = 2.0f * r1 * cos(theta1) - 1.0f;
-        rand_matrix[i][1] = 2.0f * r1 * sin(theta1) - 1.0f;
-        rand_matrix[i + 1][0] = 2.0f * r2 * cos(theta2) - 1.0f;
-        rand_matrix[i + 1][1] = 2.0f * r2 * sin(theta2) - 1.0f;
-    }
-}
-
 static __global__ void photon(float ** global_heat)
 {
     /* Step 0: Inicializo el PRNG */
@@ -50,11 +32,7 @@ static __global__ void photon(float ** global_heat)
     curandStatePhilox4_32_10_t state;
     curand_init((7 + idx) * 9967, (idx + 1), (7 + idx) * 197, &state);
 
-    float4 rand;
-    float rand_matrix[MAX_RAND_MATRIX][2];
-    init_rand_matrix(rand_matrix, &state);
-
-    // Defino matrices locales
+    // Defino matrices auxiliares
     float local_heat[SHELLS][2];
     for (int i = 0; i < SHELLS; i++) {
         local_heat[i][0] = local_heat[i][1] = 0.0f;
@@ -74,36 +52,26 @@ static __global__ void photon(float ** global_heat)
     float v = 0.0f;
     float w = 1.0f;
     float weight = 1.0f;
-    unsigned rand_idx = 0;
-    for (int k = 0; k < 170; k++) {
-        float r1, r2;
-        if (k % 2 == 0) {
-            rand = curand_uniform4(&state);
-            r1 = rand.x;
-            r2 = rand.y;
-        } else {
-            r1 = rand.w;
-            r2 = rand.z;
-        }
+    for (;;) {
+        float4 rand = curand_uniform4(&state);
         /* Step 2: Step size selection and photon packet movement */
-        float t = -logf(r1);
+        float t = -logf(rand.x);
         /* move */
         x += t * u;
         y += t * v;
         z += t * w;
 
         /* Step 3: Absorption and scattering */
-        unsigned int shell = min((int)(sqrtf(x * x + y * y + z * z) * SHELLS_PER_MFP), SHELLS - 1);                 /* absorb */
+        unsigned int shell = min((int)(sqrtf(x * x + y * y + z * z) * SHELLS_PER_MFP), SHELLS - 1); /* absorb */
         float _heat = (1.0f - ALBEDO) * weight;
-        weight *= ALBEDO;
-        // Barrera de sincronizacion
         local_heat[shell][0] += _heat;
         local_heat[shell][1] += _heat * _heat;    /* add up squares */
-        ///////////////////////////
+        weight *= ALBEDO;
 
         /* New direction, rejection method */
-        float x1 = rand_matrix[rand_idx][0];
-        float x2 = rand_matrix[rand_idx++][1];
+        float r = sqrt(rand.y), theta = rand.z * 2.0f * M_PI;
+        float x1 = 2.0f * r * sin(theta) - 1.0f;
+        float x2 = 2.0f * r * cos(theta) - 1.0f;
         t = x1 * x1 + x2 * x2;
         u = 2.0f * t - 1.0f;
         t = sqrtf((1.0f - u * u) / t);
@@ -111,7 +79,7 @@ static __global__ void photon(float ** global_heat)
         w = x2 * t;
         /* Step 4: Photon termination */
         if (weight < 0.001f) {    /* roulette */
-            if (r2 > 0.1f) {
+            if (rand.w > 0.1f) {
                 break;
             }
             weight /= 0.1f;
