@@ -6,7 +6,7 @@
 #include <sys/sysinfo.h>
 
 #ifndef THREADS
-#define THREADS           28
+#define THREADS           8
 #endif
 
 #ifndef CUDA_CORES
