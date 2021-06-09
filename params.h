@@ -17,6 +17,14 @@
 #define BLOCK_SIZE        128
 #endif
 
+#ifndef PHOTONS_PER_THREAD
+#define PHOTONS_PER_THREAD 16
+#endif
+
+#ifndef REDUCE_SIZE
+#define REDUCE_SIZE        8
+#endif
+
 #ifndef CHUNKS
 #define CHUNKS            2000
 #endif
@@ -30,7 +38,7 @@
 #endif
 
 #ifndef PHOTONS
-#define PHOTONS           (1 << 25)
+#define PHOTONS           (1 << 20)
 #endif
 
 #ifndef MU_A
