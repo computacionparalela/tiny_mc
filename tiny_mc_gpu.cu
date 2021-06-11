@@ -1,4 +1,4 @@
-#include "tiny_mc_gpu.cuh"
+#include "tiny_mc_kernel.cu"
 
 char t1[] = "Tiny Monte Carlo by Scott Prahl (http://omlc.ogi.edu)";
 char t2[] = "1 W Point Source Heating in Infinite Isotropic Scattering Medium";
@@ -19,8 +19,14 @@ int main()
     cudaMallocManaged(&heat, SHELLS * sizeof(float *));
     for (int i = 0; i < SHELLS; i++) {
         cudaMallocManaged(&heat[i], 2 * sizeof(float));
+    }
+
+    (void)run_gpu_tiny_mc(heat, PHOTONS);
+
+    for (int i = 0; i < SHELLS; i++) {
         heat[i][0] = heat[i][1] = 0.0f;
     }
+
 
     double start = wtime();
     (void)run_gpu_tiny_mc(heat, PHOTONS);
@@ -40,12 +46,7 @@ int main()
         printf("# extra\t%12.5f\n", heat[SHELLS - 1][0] / PHOTONS);
     }
     printf("+>> %lf ms\n", elapsed);
-    printf("+>>> %lf K photons per second\n", 1e-3 * PHOTONS / (elapsed / 1000.0));
-
-
-    cudaFree(heat[0]);
-    cudaFree(heat[1]);
-    cudaFree(heat);
+    printf("+>>> %lf photons per millisecond\n", 1e-3 * PHOTONS / (elapsed / 1000.0));
 
     return 0;
 }

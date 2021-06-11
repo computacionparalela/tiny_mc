@@ -6,11 +6,7 @@
 #include <sys/sysinfo.h>
 
 #ifndef THREADS
-#define THREADS           8
-#endif
-
-#ifndef CUDA_CORES
-#define CUDA_CORES        384
+#define THREADS           28
 #endif
 
 #ifndef BLOCK_SIZE
@@ -18,11 +14,11 @@
 #endif
 
 #ifndef PHOTONS_PER_THREAD
-#define PHOTONS_PER_THREAD 16
+#define PHOTONS_PER_THREAD 32
 #endif
 
 #ifndef REDUCE_SIZE
-#define REDUCE_SIZE        8
+#define REDUCE_SIZE        16
 #endif
 
 #ifndef CHUNKS
@@ -38,7 +34,7 @@
 #endif
 
 #ifndef PHOTONS
-#define PHOTONS           (1 << 20)
+#define PHOTONS           (1 << 25)
 #endif
 
 #ifndef MU_A

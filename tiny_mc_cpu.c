@@ -49,7 +49,7 @@ int main(void)
                 printf("# extra\t%12.5f\n", heat[SHELLS - 1][0] / PHOTONS);
         }
         printf("+>> %lf ms\n", elapsed);
-        printf("+>>> %lf K photons per second\n", 1e-3 * PHOTONS / (elapsed / 1000.0));
+        printf("+>>> %lf photons per millisecond\n", 1e-3 * PHOTONS / (elapsed / 1000.0));
 
         return 0;
 }
