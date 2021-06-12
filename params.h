@@ -4,6 +4,7 @@
 #include <time.h> // time
 #include <omp.h>
 #include <sys/sysinfo.h>
+#include <limits.h>
 
 #ifndef THREADS
 #define THREADS           28
@@ -18,11 +19,11 @@
 #endif
 
 #ifndef REDUCE_SIZE
-#define REDUCE_SIZE        16
+#define REDUCE_SIZE       16
 #endif
 
 #ifndef CHUNKS
-#define CHUNKS            2000
+#define CHUNKS            1000
 #endif
 
 #ifndef SCHEDULE

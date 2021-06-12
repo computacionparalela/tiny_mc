@@ -39,15 +39,6 @@ static __global__ void photon(float ** global_heat)
         local_heat[i][0] = local_heat[i][1] = 0.0f;
     }
 
-    __shared__ float shared_heat[REDUCE_SIZE][SHELLS][2];
-    for (int i = threadIdx.x; i < 2 * SHELLS; i += blockDim.x) {
-        int x = i / 2, y = i % 2;// La division y el modulo son operaciones costosas, tratar de evitarlas
-        for (int j = 0; j < REDUCE_SIZE; j++) {
-            shared_heat[j][x][y] = 0.0f;
-        }
-    }
-    __syncthreads();
-
     /* Step 1: Launching a photon packet */
     float x, y, z, u, v, w, weight;
     for (unsigned cnt = 0; cnt < PHOTONS_PER_THREAD; cnt++) {
@@ -87,6 +78,16 @@ static __global__ void photon(float ** global_heat)
             }
         }
     }
+
+    /* Step 5: Reduce */
+    __shared__ float shared_heat[REDUCE_SIZE][SHELLS][2];
+    for (int i = threadIdx.x; i < 2 * SHELLS; i += blockDim.x) {
+        int x = i / 2, y = i % 2;// La division y el modulo son operaciones cos>
+        for (int j = 0; j < REDUCE_SIZE; j++) {
+            shared_heat[j][x][y] = 0.0f;
+        }
+    }
+    __syncthreads();
 
     const unsigned designed_shared_matrix = threadIdx.x % REDUCE_SIZE;
     for (int i = 0; i < SHELLS; i++) {
