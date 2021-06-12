@@ -5,8 +5,10 @@ CC = gcc-10
 CXX = g++-10
 NVCC = nvcc
 
+ADD_FLAGS = 
+
 # Flags
-OPT_FLAGS = -O3 -ffast-math -march=native -fopenmp -lpthread -floop-nest-optimize
+OPT_FLAGS = -O3 -ffast-math -march=native -fopenmp -lpthread -floop-nest-optimize $(ADD_FLAGS)
 CFLAGS = -std=c11 -Wall -Wextra -Wshadow -Wno-unknown-pragmas -flto -DRAND7 -DVERBOSE $(OPT_FLAGS)
 LDFLAGS = -lm
 
