@@ -35,13 +35,12 @@ double wtime(void);
 
 void run_both_tiny_mc(float (*heat)[2], float ** heat_gpu, const unsigned photons)
 {
-    // GPU 7 veces mas rapida que CPU
-    const unsigned frac = 8;
+    // GPU 15 veces mas rapida que CPU
+    const unsigned frac = 16;
     const unsigned photons_cpu = photons - run_gpu_tiny_mc(heat_gpu, photons - (photons / frac), false);
     run_cpu_tiny_mc(heat, photons_cpu);
     checkCudaCall(cudaDeviceSynchronize());
-    #pragma \
-    omp parallel for firstprivate(heat_gpu)  num_threads(THREADS) schedule(SCHEDULE) reduction(+:heat[:SHELLS][:2]) default(none)
+    #pragma omp parallel for firstprivate(heat_gpu)  num_threads(THREADS) schedule(SCHEDULE) reduction(+:heat[:SHELLS][:2]) default(none)
     for (int i = 0; i < SHELLS; i++) {
         heat[i][0] += heat_gpu[i][0];
         heat[i][1] += heat_gpu[i][1];

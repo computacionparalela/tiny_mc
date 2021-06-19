@@ -9,11 +9,11 @@ ADD_FLAGS =
 
 # Flags
 OPT_FLAGS = -O3 -ffast-math -march=native -fopenmp -lpthread -floop-nest-optimize $(ADD_FLAGS)
-CFLAGS = -std=c11 -Wall -Wextra -Wshadow -Wno-unknown-pragmas -flto -DRAND7 -DVERBOSE $(OPT_FLAGS)
+CFLAGS = -std=c11 -Wall -Wextra -Wshadow -Wno-unknown-pragmas -flto -DVERBOSE $(OPT_FLAGS)
 LDFLAGS = -lm
 
 CU_FLAGS_XCOMP = $(LDFLAGS) $(OPT_FLAGS) `pkg-config --libs --cflags cuda` -DVERBOSE
-CU_FLAGS = -O3 --use_fast_math -arch=sm_70 --compiler-options "$(CU_FLAGS_XCOMP)"
+CU_FLAGS = -O3 --use_fast_math -arch=sm_75 --compiler-options "$(CU_FLAGS_XCOMP)"
 
 # Files
 C_OBJS_CPU = wtime.h wtime.c params.h tiny_mc_cpu.c
