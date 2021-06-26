@@ -68,22 +68,21 @@ static __global__ void photon(float ** global_heat)
     const unsigned gtid = blockIdx.x * blockDim.x + threadIdx.x;
     const unsigned bdim = blockDim.x;
 
-    /* Step 0: Inicializo el PRNG */
+    // Inicializo el PRNG
     int4 state = make_int4((7 + gtid) * 9967, (gtid + 1), (7 + gtid) * 197, (1 + gtid) * 9997);
 
-    float local_heat[SHELLS][2];
-    #pragma unroll
-    for (int i = 0; i < SHELLS; i++) {
-        local_heat[i][0] = local_heat[i][1] = 0.0f;
-    }
-
     // Defino matrices auxiliares
+    float local_heat[SHELLS][2];
     __shared__ float shared_heat[REDUCE_SIZE][SHELLS][2];
     for (int i = tid; i < 2 * SHELLS; i += bdim) {
         int x = i / 2, y = i % 2;// La division y el modulo son operaciones caras
         for (int j = 0; j < REDUCE_SIZE; j++) {
             shared_heat[j][x][y] = 0.0f;
         }
+    }
+    #pragma unroll
+    for (int i = 0; i < SHELLS; i++) {
+        local_heat[i][0] = local_heat[i][1] = 0.0f;
     }
     __syncthreads();
 
@@ -126,50 +125,30 @@ static __global__ void photon(float ** global_heat)
             }
         }
     }
+    __syncwarp();
 
     /* Step 5: Reduce */
     #pragma unroll
-    for (int i = 0; i < SHELLS; i++) {
-        float k0 = warp_reducef(local_heat[i][0]);
-        float k1 = warp_reducef(local_heat[i][1]);
+    for (unsigned i = 0; i < SHELLS + (SHELLS % CUDA_WARP_SIZE); i++) {
+        float k0 = i < SHELLS ? local_heat[i][0] : 0.0f;
+        float k1 = i < SHELLS ? local_heat[i][1] : 0.0f;
+        k0 = warp_reducef(k0);
+        k1 = warp_reducef(k1);
         if (lane == 0) {
-            shared_heat[warp][i][0] += k0;
-            shared_heat[warp][i][1] += k1;
+            atomicAdd(&shared_heat[warp % REDUCE_SIZE][i][0], k0);
+            atomicAdd(&shared_heat[warp % REDUCE_SIZE][i][1], k1);
         }
         __syncwarp();
     }
     __syncthreads();
 
-    if (REDUCE_SIZE == 4) {
-        const unsigned __z = warp % 2, __x = warp / 2;
-        #pragma unroll
-        for (unsigned i = 0; i * CUDA_HALF_WARP_SIZE < SHELLS; i++) {
-            float k = 0.0f;
-            unsigned pos = i * CUDA_HALF_WARP_SIZE + lane % CUDA_HALF_WARP_SIZE;
-            if (pos < SHELLS) {
-                if (lane < CUDA_HALF_WARP_SIZE) {
-                    k = shared_heat[__x][pos][__z];
-                } else {
-                    k = shared_heat[__x + 2][pos][__z];
-                }
-            }
-            k = __shfl_down_sync(FULL_MASK, k, CUDA_HALF_WARP_SIZE);
-            if (lane < CUDA_HALF_WARP_SIZE) {
-                shared_heat[0][pos][0] = k;
-            }
+    #pragma unroll
+    for (unsigned size = REDUCE_SIZE / 2; 0 < size; size /= 2) {
+        unsigned group_size = bdim / size, group_pos = tid % group_size, group_id = tid / group_size;
+        for (unsigned i = group_pos; i < 2 * SHELLS; i += group_size) {
+            shared_heat[group_id][i / 2][i % 2] += shared_heat[group_id + size][i / 2][i % 2];
         }
-        for (int i = tid; i < 2 * SHELLS; i += bdim) {
-            shared_heat[0][i / 2][i % 2] += shared_heat[1][i / 2][i % 2];
-        }
-    } else {
-        #pragma unroll
-        for (unsigned size = REDUCE_SIZE / 2; 0 < size; size /= 2) {
-            unsigned group_size = bdim / size, group_pos = tid / size, group_id = tid % size;
-            for (unsigned i = group_pos; i < 2 * SHELLS; i += group_size) {
-                shared_heat[group_id][i / 2][i % 2] += shared_heat[group_id + size][i / 2][i % 2];
-            }
-            __syncthreads();
-        }
+        __syncthreads();
     }
 
     for (int i = tid; i < 2 * SHELLS; i += bdim) {
@@ -181,9 +160,6 @@ static __global__ void photon(float ** global_heat)
 
 unsigned run_gpu_tiny_mc(float ** heat, const int photons, const bool sync = true)
 {
-
-    assert(BLOCK_SIZE / CUDA_WARP_SIZE == REDUCE_SIZE);
-
     dim3 block(BLOCK_SIZE);
     dim3 grid((photons / PHOTONS_PER_THREAD) / BLOCK_SIZE);
     photon << < grid, block >> > (heat);
