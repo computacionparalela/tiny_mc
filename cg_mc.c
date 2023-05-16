@@ -7,13 +7,14 @@
 #include "params.h"
 #include "photon.h"
 
-#define PHOTON_CAP 1<<16
+#define PHOTON_CAP 1 << 16
 #define MAX_PHOTONS_PER_FRAME 20
 
 static float heats[SHELLS];
 static float _heats_squared[SHELLS];
 static int remaining_photons = PHOTON_CAP;
 
+// clang-format off
 // covers the entire screen with 2 triangles
 static const char *VSHADER = ""
 "#version 430\n"
@@ -65,8 +66,10 @@ static const char *FSHADER = ""
 "    frag_color = vec4(heat_fit, 0.0, 0.0, 1.0);\n"
 "}"
 ;
+// clang-format on
 
-void update(void) {
+void update(void)
+{
     if (remaining_photons <= 0) {
         return;
     }
@@ -83,7 +86,8 @@ void update(void) {
     glBufferSubData(GL_SHADER_STORAGE_BUFFER, 0, sizeof(heats), heats);
 }
 
-int main(void) {
+int main(void)
+{
     glfwInit();
 
     glfwWindowHint(GLFW_VISIBLE, GLFW_FALSE);
@@ -91,7 +95,7 @@ int main(void) {
     glfwWindowHint(GLFW_CONTEXT_VERSION_MAJOR, 4);
     glfwWindowHint(GLFW_CONTEXT_VERSION_MINOR, 3);
     glfwWindowHint(GLFW_OPENGL_PROFILE, GLFW_OPENGL_CORE_PROFILE);
-    GLFWwindow *window = glfwCreateWindow(800, 800, "tiny mc", NULL, NULL);
+    GLFWwindow* window = glfwCreateWindow(800, 800, "tiny mc", NULL, NULL);
     assert(window != NULL);
 
     glfwMakeContextCurrent(window);
