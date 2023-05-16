@@ -3,21 +3,21 @@ CC = gcc
 
 # Flags
 CFLAGS = -std=c11 -Wall -Wextra
-LDFLAGS = -lm
+TINY_LDFLAGS = -lm
+CG_LDFLAGS = -lm -lglfw -lGL -lGLEW
 
-# Binary file
-TARGET = tiny_mc
+TARGETS = tiny_mc cg_mc
 
 # Files
-C_SOURCES = tiny_mc.c wtime.c photon.c
+C_SOURCES = wtime.c photon.c
 C_OBJS = $(patsubst %.c, %.o, $(C_SOURCES))
 
-# Rules
-all: $(TARGET)
+tiny_mc: tiny_mc.o $(C_OBJS)
+	$(CC) $(CFLAGS) -o $@ $^ $(TINY_LDFLAGS)
 
-$(TARGET): $(C_OBJS)
-	$(CC) $(CFLAGS) -o $@ $^ $(LDFLAGS)
+cg_mc: cg_mc.o $(C_OBJS)
+	$(CC) $(CFLAGS) -o $@ $^ $(CG_LDFLAGS)
 
 clean:
-	rm -f $(TARGET) *.o
+	rm -f $(TARGETS) *.o
 
